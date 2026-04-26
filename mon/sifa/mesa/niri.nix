@@ -24,7 +24,7 @@
         spawn-at-startup = [
           (lib.getExe misuNoctalia)
         ];
-        xwayland-satellite.path = lib.getExe pkgs.xwayland-satellite;
+        #xwayland-satellite.path = lib.getExe pkgs.xwayland-satellite;
         input.keyboard = {
           xkb.layout = "us";
           xkb.variant = "intl";
@@ -32,7 +32,7 @@
         layout.gaps = 5;
         binds = {
           "Mod+Return".spawn-sh = lib.getExe misuFoot;
-          "Mod+Q".close-window = null;
+          "Mod+Q".close-window = {};
           "Mod+S".spawn-sh = "${lib.getExe misuNoctalia} ipc call launcher toggle";
         };
       };
