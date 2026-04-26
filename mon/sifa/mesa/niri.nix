@@ -14,15 +14,15 @@
   perSystem =
   { pkgs, lib, self', ... }:
   let
-    misuFoot = lib.getExe self'.packages.misuFoot;
-    misuNoctalia = lib.getExe self'.packages.misuNoctalia;
+    misuFoot = self'.packages.misuFoot;
+    misuNoctalia = self'.packages.misuNoctalia;
   in
   {
     packages.misuNiri = inputs.wrapper-modules.wrappers.niri.wrap {
       inherit pkgs;
       settings = {
         spawn-at-startup = [
-          { command = [ misuNoctalia ]; }
+          (lib.getExe misuNoctalia)
         ];
         xwayland-satellite.path = lib.getExe pkgs.xwayland-satellite;
         input.keyboard = {
@@ -31,7 +31,7 @@
         };
         layout.gaps = 5;
         binds = {
-          "Mod+Return".spawn-sh = misuFoot;
+          "Mod+Return".spawn-sh = lib.getExe misuFoot;
           "Mod+Q".close-window = null;
           "Mod+S".spawn-sh = "${misuNoctalia} ipc call launcher toggle";
         };
