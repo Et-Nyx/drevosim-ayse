@@ -33,7 +33,7 @@
         binds = {
           "Mod+Return".spawn-sh = lib.getExe misuFoot;
           "Mod+Q".close-window = null;
-          "Mod+S".spawn-sh = "${misuNoctalia} ipc call launcher toggle";
+          "Mod+S".spawn-sh = "${lib.getExe misuNoctalia} ipc call launcher toggle";
         };
       };
     };
