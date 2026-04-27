@@ -14,6 +14,7 @@
       self.nixosModules.fuzzel
       self.nixosModules.niri
       self.nixosModules.noctalia
+      self.nixosModules.neovim
     ];
   };
 }
