@@ -1,16 +1,16 @@
 { self, inputs, ... }:
 {
   flake.nixosModules.neovim =
-    { pkgs, ... }:
-    let
-      misuNeovim = self.packages.${pkgs.stdenv.hostPlatform.system}.misuNeovim;
-    in
-    {
-      programs.neovim = {
-        enable = true;
-        package = misuNeovim;
-      };
+  { pkgs, ... }:
+  let
+    misuNeovim = self.packages.${pkgs.stdenv.hostPlatform.system}.misuNeovim;
+  in
+  {
+    programs.neovim = {
+      enable = true;
+      package = misuNeovim;
     };
+  };
 
   perSystem =
     { pkgs, lib, ... }:
@@ -192,7 +192,7 @@
 
         specs.lualine = {
           data = pkgs.vimPlugins.lualine-nvim;
-          config = ''
+          config = /* lua */ ''
             local sq = "'"
             require('lualine').setup({
               options = {
