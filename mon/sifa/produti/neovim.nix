@@ -34,7 +34,7 @@
         specs.catppuccin = {
           data = pkgs.vimPlugins.catppuccin-nvim;
           before = [ "INIT_MAIN" ];
-          config = ''
+          config = /* lua */ ''
             require('catppuccin').setup({
               flavour = 'macchiato',
               integrations = {
