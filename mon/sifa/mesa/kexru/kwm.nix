@@ -182,13 +182,15 @@
         mkdir -p $out/share/wayland-sessions
         cat > $out/share/wayland-sessions/river-kwm.desktop <<EOF
         [Desktop Entry]
-        Name=River (kwm)
+        Name=River + kwm
         Comment=River Wayland compositor with kwm
-        Exec=${pkgs.river}/bin/river -c ${placeholder "out"}/bin/kwm
-        Type=Application
+        Exec=${pkgs.river}/bin/river
+	Type=Application
         DesktopNames=river
         EOF
       '';
+      # ${pkgs.river}/bin/river -c ${placeholder "out"}/bin/kwm bash -l -c "river" 
+
       passthru.providedSessions = [ "river-kwm" ];
     };
   };

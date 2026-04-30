@@ -11,7 +11,11 @@
       file.xdg_config."river/init" = {
         text = /* sh */ ''
           #!/bin/sh
-          exec $RIVER_WM
+	  dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP
+          systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP
+          systemctl --user start graphical-session.target
+	  kanshi &
+	  exec $RIVER_WM
         '';
         executable = true;
       };
