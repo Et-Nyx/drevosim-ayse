@@ -1,6 +1,6 @@
 { self, inputs, ... }:
 {
-  flake.nixosModules.git = 
+  flake.nixosModules.git =
   { pkgs, ... }:
   let
     misuGit = self.packages.${pkgs.stdenv.hostPlatform.system}.misuGit;
@@ -18,8 +18,8 @@
       inherit pkgs;
       settings = {
         user.email = lib.mkDefault "eter.nyx@proton.me";
-	user.name = lib.mkDefault "ET";
-	init.defaultBranch = "master";
+        user.name = lib.mkDefault "ET";
+        init.defaultBranch = "master";
       };
     };
   };

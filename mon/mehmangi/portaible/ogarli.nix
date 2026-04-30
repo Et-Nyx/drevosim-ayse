@@ -19,5 +19,11 @@
         };
       };
     };
+
+    programs.ssh.extraConfig = ''
+      Host gitlab.com
+        User git
+        IdentityFile ~/.ssh/gitlab/gitlab_ed25519
+    '';
   };
 }
