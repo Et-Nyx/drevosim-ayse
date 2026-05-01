@@ -19,7 +19,7 @@
             inherit pkgs;
 	    settings = {
 	      config_directory = ./.;
-	    }
+	    };
             specs.basic = {
 	      data = null;
 	      before = ["MAIN_INIT"];
