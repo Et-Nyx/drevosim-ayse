@@ -13,20 +13,20 @@
   };
 
   perSystem =
-    { pkgs, lib, ... }:
-    {
-        packages.misuNeovim = inputs.wrapper-modules.wrappers.neovim.wrap {
-            inherit pkgs;
-	    settings = {
-	      config_directory = ./.;
-	    };
-            specs.basic = {
-	      data = null;
-	      before = ["MAIN_INIT"];
-              config = /* lua */ ''
-	      	require('init')
-              '';
-            };
-        };
+  { pkgs, lib, ... }:
+  {
+    packages.misuNeovim = inputs.wrapper-modules.wrappers.neovim.wrap {
+      inherit pkgs;
+      settings = {
+        config_directory = ./.;
+      };
+      specs.basic = {
+        data = null;
+        before = ["MAIN_INIT"];
+        config = /* lua */ ''
+          require('init')
+        '';
+      };
     };
+  };
 }
