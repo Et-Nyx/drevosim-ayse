@@ -11,19 +11,19 @@
       useDefaultShell = true;
       extraGroups = [
         "networkmanager"
-        "wheel"
+          "wheel"
       ];
       maid = {
         systemd.globalEnvironment = {
           XDG_CURRENT_DESKTOP = "river";
+          EDITOR = "nvim";
         };
       };
     };
-
     programs.ssh.extraConfig = ''
       Host gitlab.com
-        User git
-        IdentityFile ~/.ssh/gitlab/gitlab_ed25519
+      User git
+      IdentityFile ~/.ssh/gitlab/gitlab_ed25519
     '';
   };
 }
