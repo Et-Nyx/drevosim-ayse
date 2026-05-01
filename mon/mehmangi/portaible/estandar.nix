@@ -5,6 +5,7 @@
       inputs.nix-maid.nixosModules.default
       self.nixosModules.portaibleEstrutur
       self.nixosModules.portaibleOgarli
+      self.nixosModules.alo
       self.nixosModules.ly
       #self.nixosModules.river-classic
       self.nixosModules.river
