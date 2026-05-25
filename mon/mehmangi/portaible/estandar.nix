@@ -18,6 +18,7 @@
       self.nixosModules.neovim
       self.nixosModules.kanshi
       self.nixosModules.git
+      self.nixosModules.zed
     ];
   };
 }
