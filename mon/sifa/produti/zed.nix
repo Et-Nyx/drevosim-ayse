@@ -3,8 +3,8 @@
   flake.nixosModules.zed =
   { pkgs, ... }:
   {
-    environment.systemPackages = [
-      pkgs.zed-editor-fhs
-    ]
+    programs.zed-editor-fhs = {
+      enable = true;
+    };
   };
 }
