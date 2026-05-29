@@ -60,6 +60,14 @@
           };
         };
       })
+      ({ lib, ... }: {
+        virtualisation.vmVariant = {
+          virtualisation.memorySize = 2048;
+          virtualisation.cores = 2;
+          users.users.eter.hashedPasswordFile = lib.mkForce null;
+          users.users.eter.password = "nixos";
+        };
+      })
     ];
   };
 }
