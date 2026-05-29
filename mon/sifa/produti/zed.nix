@@ -12,7 +12,7 @@
       config = lib.mkIf cfg.enable {
         # TODO: Add zed-editor configuration using nix-wrapper-modules or nix-maid
         environment.systemPackages = with pkgs; [
-          zen-editor
+          zed-editor
         ];
         users.users.eter.maid = {
           file.xdg_config."zed/settings.json" = {
