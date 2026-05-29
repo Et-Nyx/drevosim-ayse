@@ -8,9 +8,14 @@
     {
       options.taluji.sifa.mesa.kexru.river = {
         enable = lib.mkEnableOption "River wayland compositor session";
+        layoutManager = lib.mkOption {
+          type = lib.types.enum [ "kwm" "none" ];
+          default = "kwm";
+          description = "The window/layout manager to pair with River.";
+        };
       };
       config = lib.mkIf cfg.enable {
-        taluji.sifa.mesa.kexru.kwm.enable = lib.mkDefault true;
+        taluji.sifa.mesa.kexru.kwm.enable = lib.mkDefault (cfg.layoutManager == "kwm");
         environment.systemPackages = [ pkgs.river ];
         users.users.eter.maid = {
           file.xdg_config."river/init" = {

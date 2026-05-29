@@ -22,7 +22,10 @@
           };
           mesa = {
             kexru = {
-              river.enable = true;
+              river = {
+                enable = true;
+                layoutManager = "kwm";
+              };
             };
             noctalia-shell = {
               niri.enable = true;
@@ -42,6 +45,7 @@
           produti = {
             neovim.enable = true;
             zed.enable = true;
+            basa.enable = true;
           };
           servi = {
             kanshi.enable = true;
