@@ -1,12 +1,16 @@
 { self, inputs, ... }:
 {
   flake.nixosModules.portaibleOgarli =
-  { pkgs, ... }:
+  { pkgs, config, ... }:
   {
+    age.secrets.eter-password = {
+      file = self + "/siri/portaible-eter-password.age";
+    };
+
     users.mutableUsers = false;
     users.users.eter = {
       description = "ET";
-      hashedPassword = "REDACTED";
+      hashedPasswordFile = config.age.secrets.eter-password.path;
       isNormalUser = true;
       useDefaultShell = true;
       extraGroups = [

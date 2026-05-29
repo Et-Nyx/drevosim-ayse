@@ -6,7 +6,12 @@
       imports = [
         self.nixosModules.portaibleHardwer
       ];
-      users.users.root.hashedPassword = "REDACTED";
+
+      age.secrets.root-password = {
+        file = self + "/siri/portaible-root-password.age";
+      };
+
+      users.users.root.hashedPasswordFile = config.age.secrets.root-password.path;
 
       # Flakes
       nix.settings.experimental-features = [

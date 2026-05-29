@@ -7,6 +7,7 @@
 
     wrapper-modules.url = "github:BirdeeHub/nix-wrapper-modules";
     nix-maid.url = "github:viperML/nix-maid";
+    agenix.url = "github:ryantm/agenix";
 
     kwm-src = {
       url = "github:kewuaa/kwm";

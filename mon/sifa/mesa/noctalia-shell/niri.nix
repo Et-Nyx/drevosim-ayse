@@ -25,6 +25,7 @@
           (lib.getExe misuNoctalia)
         ];
         #xwayland-satellite.path = lib.getExe pkgs.xwayland-satellite;
+        # TODO: Enable switching between keyboard layouts (e.g. US International and Brazilian ABNT2) on the go
         input.keyboard = {
           xkb.layout = "us";
           xkb.variant = "intl";
