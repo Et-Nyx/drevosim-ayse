@@ -1,94 +1,100 @@
 { self, inputs, ... }:
 {
   flake.nixosModules.kwm =
-  { pkgs, lib, ... }:
-  let
-    misuKwm = self.packages.${pkgs.stdenv.hostPlatform.system}.kwm;
-  in
-  {
-    environment.systemPackages = [ misuKwm ];
-    services.displayManager.sessionPackages = [ misuKwm ];
-    environment.sessionVariables.RIVER_WM = "${misuKwm}/bin/kwm";
-    users.users.eter.maid = {
-      file.xdg_config."kwm/config.zon" = {
-        text = /* zig */ ''
-        .{
-            .bindings = .{
-                .repeat_info = .{ .rate = 50, .delay = 300 },
-                .key = .{
-                    // --- Spawning ---
-                    .{ .keysym = "Return", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .{ .spawn = .{ .argv = .{ "foot" } } } } } },
-                    .{ .keysym = "d", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .{ .spawn = .{ .argv = .{ "fuzzel" } } } } } },
-                    .{ .keysym = "b", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .{ .spawn = .{ .argv = .{ "librewolf" } } } } } },
-                    .{ .keysym = "e", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .{ .spawn = .{ .argv = .{ "nvim" } } } } } },
+    { pkgs, lib, config, ... }:
+    let
+      cfg = config.taluji.sifa.mesa.kexru.kwm;
+      misuKwm = self.packages.${pkgs.stdenv.hostPlatform.system}.kwm;
+    in
+    {
+      options.taluji.sifa.mesa.kexru.kwm = {
+        enable = lib.mkEnableOption "kwm compositor config/package";
+      };
+      config = lib.mkIf cfg.enable {
+        environment.systemPackages = [ misuKwm ];
+        services.displayManager.sessionPackages = [ misuKwm ];
+        environment.sessionVariables.RIVER_WM = "${misuKwm}/bin/kwm";
+        users.users.eter.maid = {
+          file.xdg_config."kwm/config.zon" = {
+            text = /* zig */ ''
+            .{
+                .bindings = .{
+                    .repeat_info = .{ .rate = 50, .delay = 300 },
+                    .key = .{
+                        // --- Spawning ---
+                        .{ .keysym = "Return", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .{ .spawn = .{ .argv = .{ "foot" } } } } } },
+                        .{ .keysym = "d", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .{ .spawn = .{ .argv = .{ "fuzzel" } } } } } },
+                        .{ .keysym = "b", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .{ .spawn = .{ .argv = .{ "librewolf" } } } } } },
+                        .{ .keysym = "e", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .{ .spawn = .{ .argv = .{ "nvim" } } } } } },
 
-                    // --- Window management ---
-                    .{ .keysym = "q", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .close } } },
-                    .{ .keysym = "q", .modifiers = .{ .mod4 = true, .shift = true }, .event = .{ .click = .{ .pressed = .{ .quit = .{ .exit_session = true, .hook = null } } } } },
+                        // --- Window management ---
+                        .{ .keysym = "q", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .close } } },
+                        .{ .keysym = "q", .modifiers = .{ .mod4 = true, .shift = true }, .event = .{ .click = .{ .pressed = .{ .quit = .{ .exit_session = true, .hook = null } } } } },
 
-                    // --- Tags (workspaces) ---
-                    // Switch to tag
-                    .{ .keysym = "1", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .{ .set_output_tag = .{ .tag = .{ .tag = 0b1 } } } } } },
-                    .{ .keysym = "2", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .{ .set_output_tag = .{ .tag = .{ .tag = 0b10 } } } } } },
-                    .{ .keysym = "3", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .{ .set_output_tag = .{ .tag = .{ .tag = 0b100 } } } } } },
-                    .{ .keysym = "4", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .{ .set_output_tag = .{ .tag = .{ .tag = 0b1000 } } } } } },
-                    .{ .keysym = "5", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .{ .set_output_tag = .{ .tag = .{ .tag = 0b10000 } } } } } },
-                    .{ .keysym = "6", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .{ .set_output_tag = .{ .tag = .{ .tag = 0b100000 } } } } } },
-                    .{ .keysym = "7", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .{ .set_output_tag = .{ .tag = .{ .tag = 0b1000000 } } } } } },
-                    .{ .keysym = "8", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .{ .set_output_tag = .{ .tag = .{ .tag = 0b10000000 } } } } } },
-                    .{ .keysym = "9", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .{ .set_output_tag = .{ .tag = .{ .tag = 0b100000000 } } } } } },
-                    // Move window to tag
-                    .{ .keysym = "1", .modifiers = .{ .mod4 = true, .shift = true }, .event = .{ .click = .{ .pressed = .{ .set_window_tag = .{ .tag = .{ .tag = 0b1 }, .focus_follow = true } } } } },
-                    .{ .keysym = "2", .modifiers = .{ .mod4 = true, .shift = true }, .event = .{ .click = .{ .pressed = .{ .set_window_tag = .{ .tag = .{ .tag = 0b10 }, .focus_follow = true } } } } },
-                    .{ .keysym = "3", .modifiers = .{ .mod4 = true, .shift = true }, .event = .{ .click = .{ .pressed = .{ .set_window_tag = .{ .tag = .{ .tag = 0b100 }, .focus_follow = true } } } } },
-                    .{ .keysym = "4", .modifiers = .{ .mod4 = true, .shift = true }, .event = .{ .click = .{ .pressed = .{ .set_window_tag = .{ .tag = .{ .tag = 0b1000 }, .focus_follow = true } } } } },
-                    .{ .keysym = "5", .modifiers = .{ .mod4 = true, .shift = true }, .event = .{ .click = .{ .pressed = .{ .set_window_tag = .{ .tag = .{ .tag = 0b10000 }, .focus_follow = true } } } } },
-                    .{ .keysym = "6", .modifiers = .{ .mod4 = true, .shift = true }, .event = .{ .click = .{ .pressed = .{ .set_window_tag = .{ .tag = .{ .tag = 0b100000 }, .focus_follow = true } } } } },
-                    .{ .keysym = "7", .modifiers = .{ .mod4 = true, .shift = true }, .event = .{ .click = .{ .pressed = .{ .set_window_tag = .{ .tag = .{ .tag = 0b1000000 }, .focus_follow = true } } } } },
-                    .{ .keysym = "8", .modifiers = .{ .mod4 = true, .shift = true }, .event = .{ .click = .{ .pressed = .{ .set_window_tag = .{ .tag = .{ .tag = 0b10000000 }, .focus_follow = true } } } } },
-                    .{ .keysym = "9", .modifiers = .{ .mod4 = true, .shift = true }, .event = .{ .click = .{ .pressed = .{ .set_window_tag = .{ .tag = .{ .tag = 0b100000000 }, .focus_follow = true } } } } },
+                        // --- Tags (workspaces) ---
+                        // Switch to tag
+                        .{ .keysym = "1", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .{ .set_output_tag = .{ .tag = .{ .tag = 0b1 } } } } } },
+                        .{ .keysym = "2", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .{ .set_output_tag = .{ .tag = .{ .tag = 0b10 } } } } } },
+                        .{ .keysym = "3", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .{ .set_output_tag = .{ .tag = .{ .tag = 0b100 } } } } } },
+                        .{ .keysym = "4", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .{ .set_output_tag = .{ .tag = .{ .tag = 0b1000 } } } } } },
+                        .{ .keysym = "5", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .{ .set_output_tag = .{ .tag = .{ .tag = 0b10000 } } } } } },
+                        .{ .keysym = "6", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .{ .set_output_tag = .{ .tag = .{ .tag = 0b100000 } } } } } },
+                        .{ .keysym = "7", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .{ .set_output_tag = .{ .tag = .{ .tag = 0b1000000 } } } } } },
+                        .{ .keysym = "8", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .{ .set_output_tag = .{ .tag = .{ .tag = 0b10000000 } } } } } },
+                        .{ .keysym = "9", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .{ .set_output_tag = .{ .tag = .{ .tag = 0b100000000 } } } } } },
+                        // Move window to tag
+                        .{ .keysym = "1", .modifiers = .{ .mod4 = true, .shift = true }, .event = .{ .click = .{ .pressed = .{ .set_window_tag = .{ .tag = .{ .tag = 0b1 }, .focus_follow = true } } } } },
+                        .{ .keysym = "2", .modifiers = .{ .mod4 = true, .shift = true }, .event = .{ .click = .{ .pressed = .{ .set_window_tag = .{ .tag = .{ .tag = 0b10 }, .focus_follow = true } } } } },
+                        .{ .keysym = "3", .modifiers = .{ .mod4 = true, .shift = true }, .event = .{ .click = .{ .pressed = .{ .set_window_tag = .{ .tag = .{ .tag = 0b100 }, .focus_follow = true } } } } },
+                        .{ .keysym = "4", .modifiers = .{ .mod4 = true, .shift = true }, .event = .{ .click = .{ .pressed = .{ .set_window_tag = .{ .tag = .{ .tag = 0b1000 }, .focus_follow = true } } } } },
+                        .{ .keysym = "5", .modifiers = .{ .mod4 = true, .shift = true }, .event = .{ .click = .{ .pressed = .{ .set_window_tag = .{ .tag = .{ .tag = 0b10000 }, .focus_follow = true } } } } },
+                        .{ .keysym = "6", .modifiers = .{ .mod4 = true, .shift = true }, .event = .{ .click = .{ .pressed = .{ .set_window_tag = .{ .tag = .{ .tag = 0b100000 }, .focus_follow = true } } } } },
+                        .{ .keysym = "7", .modifiers = .{ .mod4 = true, .shift = true }, .event = .{ .click = .{ .pressed = .{ .set_window_tag = .{ .tag = .{ .tag = 0b1000000 }, .focus_follow = true } } } } },
+                        .{ .keysym = "8", .modifiers = .{ .mod4 = true, .shift = true }, .event = .{ .click = .{ .pressed = .{ .set_window_tag = .{ .tag = .{ .tag = 0b10000000 }, .focus_follow = true } } } } },
+                        .{ .keysym = "9", .modifiers = .{ .mod4 = true, .shift = true }, .event = .{ .click = .{ .pressed = .{ .set_window_tag = .{ .tag = .{ .tag = 0b100000000 }, .focus_follow = true } } } } },
 
-                    // --- Navigation ---
-                    .{ .keysym = "j", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .{ .focus_iter = .{ .direction = .forward, .skip = .none } } } } },
-                    .{ .keysym = "k", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .{ .focus_iter = .{ .direction = .reverse, .skip = .none } } } } },
+                        // --- Navigation ---
+                        .{ .keysym = "j", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .{ .focus_iter = .{ .direction = .forward, .skip = .none } } } } },
+                        .{ .keysym = "k", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .{ .focus_iter = .{ .direction = .reverse, .skip = .none } } } } },
 
-                    // --- Swapping ---
-                    .{ .keysym = "j", .modifiers = .{ .mod4 = true, .shift = true }, .event = .{ .click = .{ .pressed = .{ .swap = .{ .direction = .forward } } } } },
-                    .{ .keysym = "k", .modifiers = .{ .mod4 = true, .shift = true }, .event = .{ .click = .{ .pressed = .{ .swap = .{ .direction = .reverse } } } } },
+                        // --- Swapping ---
+                        .{ .keysym = "j", .modifiers = .{ .mod4 = true, .shift = true }, .event = .{ .click = .{ .pressed = .{ .swap = .{ .direction = .forward } } } } },
+                        .{ .keysym = "k", .modifiers = .{ .mod4 = true, .shift = true }, .event = .{ .click = .{ .pressed = .{ .swap = .{ .direction = .reverse } } } } },
 
-                    // --- Master area ---
-                    .{ .keysym = "h", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .{ .modify_mfact = .{ .change = .{ .step = -0.05 } } } } } },
-                    .{ .keysym = "l", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .{ .modify_mfact = .{ .change = .{ .step = 0.05 } } } } } },
-                    .{ .keysym = "Return", .modifiers = .{ .mod4 = true, .shift = true }, .event = .{ .click = .{ .pressed = .{ .zoom = .{ .swap = false } } } } },
+                        // --- Master area ---
+                        .{ .keysym = "h", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .{ .modify_mfact = .{ .change = .{ .step = -0.05 } } } } } },
+                        .{ .keysym = "l", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .{ .modify_mfact = .{ .change = .{ .step = 0.05 } } } } } },
+                        .{ .keysym = "Return", .modifiers = .{ .mod4 = true, .shift = true }, .event = .{ .click = .{ .pressed = .{ .zoom = .{ .swap = false } } } } },
 
-                    // --- Layouts ---
-                    .{ .keysym = "t", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .{ .switch_layout = .{ .layout = .tile } } } } },
-                    .{ .keysym = "g", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .{ .switch_layout = .{ .layout = .grid } } } } },
-                    .{ .keysym = "m", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .{ .switch_layout = .{ .layout = .monocle } } } } },
-                    .{ .keysym = "s", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .{ .switch_layout = .{ .layout = .scroller } } } } },
-                    .{ .keysym = "Space", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .switch_to_previous_layout } } },
+                        // --- Layouts ---
+                        .{ .keysym = "t", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .{ .switch_layout = .{ .layout = .tile } } } } },
+                        .{ .keysym = "g", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .{ .switch_layout = .{ .layout = .grid } } } } },
+                        .{ .keysym = "m", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .{ .switch_layout = .{ .layout = .monocle } } } } },
+                        .{ .keysym = "s", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .{ .switch_layout = .{ .layout = .scroller } } } } },
+                        .{ .keysym = "Space", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .switch_to_previous_layout } } },
 
-                    // --- Window state ---
-                    .{ .keysym = "Space", .modifiers = .{ .mod4 = true, .shift = true }, .event = .{ .click = .{ .pressed = .toggle_floating } } },
-                    .{ .keysym = "f", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .{ .toggle_fullscreen = .{ .in_window = false } } } } },
+                        // --- Window state ---
+                        .{ .keysym = "Space", .modifiers = .{ .mod4 = true, .shift = true }, .event = .{ .click = .{ .pressed = .toggle_floating } } },
+                        .{ .keysym = "f", .modifiers = .{ .mod4 = true }, .event = .{ .click = .{ .pressed = .{ .toggle_fullscreen = .{ .in_window = false } } } } },
 
-                    // --- Bar ---
-                    .{ .keysym = "b", .modifiers = .{ .mod4 = true, .shift = true }, .event = .{ .click = .{ .pressed = .toggle_bar } } },
+                        // --- Bar ---
+                        .{ .keysym = "b", .modifiers = .{ .mod4 = true, .shift = true }, .event = .{ .click = .{ .pressed = .toggle_bar } } },
 
-                    // --- Gaps ---
-                    .{ .keysym = "bracketleft", .modifiers = .{ .mod4 = true, .shift = true }, .event = .{ .click = .{ .pressed = .{ .modify_gap = .{ .step = -2 } } } } },
-                    .{ .keysym = "bracketright", .modifiers = .{ .mod4 = true, .shift = true }, .event = .{ .click = .{ .pressed = .{ .modify_gap = .{ .step = 2 } } } } },
+                        // --- Gaps ---
+                        .{ .keysym = "bracketleft", .modifiers = .{ .mod4 = true, .shift = true }, .event = .{ .click = .{ .pressed = .{ .modify_gap = .{ .step = -2 } } } } },
+                        .{ .keysym = "bracketright", .modifiers = .{ .mod4 = true, .shift = true }, .event = .{ .click = .{ .pressed = .{ .modify_gap = .{ .step = 2 } } } } },
+                    },
+                    .pointer = .{
+                        .{ .button = .left, .modifiers = .{ .mod4 = true }, .event = .{ .pressed = .pointer_move } },
+                        .{ .button = .right, .modifiers = .{ .mod4 = true }, .event = .{ .pressed = .pointer_resize } },
+                    },
                 },
-                .pointer = .{
-                    .{ .button = .left, .modifiers = .{ .mod4 = true }, .event = .{ .pressed = .pointer_move } },
-                    .{ .button = .right, .modifiers = .{ .mod4 = true }, .event = .{ .pressed = .pointer_resize } },
-                },
-            },
-        }
-        '';
+            }
+            '';
+          };
+        };
       };
     };
-  };
   perSystem =
   { pkgs, ... }:
   let
@@ -185,11 +191,10 @@
         Name=River + kwm
         Comment=River Wayland compositor with kwm
         Exec=${pkgs.river}/bin/river
-	Type=Application
+        Type=Application
         DesktopNames=river
         EOF
       '';
-      # ${pkgs.river}/bin/river -c ${placeholder "out"}/bin/kwm bash -l -c "river" 
 
       passthru.providedSessions = [ "river-kwm" ];
     };
