@@ -13,8 +13,7 @@
         programs.fish.enable = true;
         users = {
           defaultUserShell = pkgs.fish;
-          users.eter = {
-            maid = {
+          users.eter.maid = {
               file.xdg_config."fish/config.fish" = {
                 text = /* fish */ ''
                   if status is-interactive

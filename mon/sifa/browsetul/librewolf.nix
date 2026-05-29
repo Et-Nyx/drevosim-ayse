@@ -10,7 +10,7 @@
         enable = lib.mkEnableOption "Librewolf browser";
       };
       config = lib.mkIf cfg.enable {
-        environment.systemPackages = [ pkgs.librewolf ];
+        environment.systemPackages = with pkgs;[ librewolf ];
       };
     };
 }

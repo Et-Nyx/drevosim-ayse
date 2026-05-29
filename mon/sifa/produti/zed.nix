@@ -11,6 +11,23 @@
       };
       config = lib.mkIf cfg.enable {
         # TODO: Add zed-editor configuration using nix-wrapper-modules or nix-maid
+        environment.systemPackages = with pkgs; [
+          zen-editor
+        ];
+        users.users.eter.maid = {
+          file.xdg_config."zed/settings.json" = {
+            text = /* json */ ''
+              {
+                "vim_mode": true,
+                "ui_font_size": 16,
+                "buffer_font_size": 16,
+                "theme": {
+                  "mode": "system",
+                },
+              }
+            '';
+          };
+        };
       };
     };
 }

@@ -13,6 +13,8 @@
       config = lib.mkIf cfg.enable {
         programs.neovim = {
           enable = true;
+          vimAlias = true;
+          defaultEditor = true;
           package = misuNeovim;
         };
       };
