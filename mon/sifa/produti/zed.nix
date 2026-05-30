@@ -18,10 +18,29 @@
           text = builtins.toJSON {
             vim_mode = true;
             format_on_save = "off";
+            theme = {
+              mode = "system";
+              dark = "Zedwaita Dark";
+              light = "Zedwaita Light";
+            };
+            icon_theme = {
+              mode = "system";
+              dark = "Colored Zed Icon Theme Dark";
+              light = "Colored Zed Icon Theme White";
+            };
 
             auto_install_extensions = {
               html = true;
               nix = true;
+              rust = true;
+              haskell = true;
+              zig = true;
+              lua = true;
+              fish = true;
+              git-firefly = true;
+
+              zedwaita = true;
+              colored-zed-icons-theme = true;
             };
           };
         };
