@@ -6,11 +6,7 @@
       inputs.agenix.nixosModules.default
       self.nixosModules.portaibleEstrutur
       self.nixosModules.portaibleOgarli
-      
-      # The dynamic module that bundles all A La Carte modules!
       self.nixosModules.monEstandar
-
-      # Toggles for features bundled cleanly in a single, recursively nested attribute set!
       ({ ... }: {
         taluji.sifa = {
           programa = {
@@ -58,14 +54,6 @@
             pipewire.enable = true;
             wob.enable = true;
           };
-        };
-      })
-      ({ lib, ... }: {
-        virtualisation.vmVariant = {
-          virtualisation.memorySize = 2048;
-          virtualisation.cores = 2;
-          users.users.eter.hashedPasswordFile = lib.mkForce null;
-          users.users.eter.password = "nixos";
         };
       })
     ];
