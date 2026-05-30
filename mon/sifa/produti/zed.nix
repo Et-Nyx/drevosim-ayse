@@ -32,8 +32,8 @@
             };
             icon_theme = {
               mode = "dark";
-              dark = "Colored Zed Icon Theme Dark";
-              light = "Colored Zed Icon Theme White";
+              dark = "Colored Zed Icons Theme Dark";
+              light = "Colored Zed Icons Theme White";
             };
 
             auto_install_extensions = {
