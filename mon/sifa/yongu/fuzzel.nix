@@ -24,7 +24,7 @@
               misuFuzzel
               systemd
             ];
-            text = ''
+            text = /* bash */''
               # Power menu options
               OPTIONS="🔒 Lock\n💤 Suspend\n🔄 Reboot\n🛑 Shutdown\n🚪 Log out"
 
@@ -67,7 +67,7 @@
               libnotify
               gawk
             ];
-            text = ''
+            text = /* bash */''
               # 1. Fetch clean playback sinks list using pamixer (skip the header line)
               SINKS=$(pamixer --list-sinks | tail -n +2)
 
