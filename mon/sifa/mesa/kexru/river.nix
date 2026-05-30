@@ -30,6 +30,7 @@
         users.users.${config.taluji.userName}.maid = {
           file.xdg_config."river/init" = {
             text = /* bash */ ''
+              #!/bin/sh
               dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP
               systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP
               systemctl --user start graphical-session.target

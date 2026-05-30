@@ -15,7 +15,7 @@
           (pkgs.writeShellApplication {
             name = "fuzzel-energi";
             runtimeInputs = [ misuFuzzel pkgs.systemd ];
-            text = /*  */ ''
+            text = /* bash */ ''
               CHOICE=$(printf '%s\n' Lock Suspend Reboot Shutdown Logout \
                 | fuzzel --dmenu -p "Power: " || true)
               case "$CHOICE" in
