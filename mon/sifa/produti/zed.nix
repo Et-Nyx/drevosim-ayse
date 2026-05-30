@@ -20,7 +20,8 @@
               {
                 "vim_mode": true,
                 "ui_font_size": 16,
-                "buffer_font_size": 16
+                "buffer_font_size": 16,
+                "format_on_save": off
                 }
               }
             '';
