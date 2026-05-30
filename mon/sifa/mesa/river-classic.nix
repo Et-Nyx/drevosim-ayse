@@ -13,7 +13,7 @@
         programs.river-classic = {
           enable = true;
         };
-        users.users.eter.maid = {
+        users.users.${config.taluji.userName}.maid = {
           file.xdg_config."river/init" = {
             text = /* sh */ ''
               #!/bin/sh

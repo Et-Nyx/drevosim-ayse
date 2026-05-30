@@ -14,16 +14,14 @@
         environment.systemPackages = with pkgs; [
           zed-editor
         ];
-        users.users.eter.maid = {
+        users.users.${config.taluji.userName}.maid = {
           file.xdg_config."zed/settings.json" = {
             text = /* json */ ''
               {
                 "vim_mode": true,
                 "ui_font_size": 16,
-                "buffer_font_size": 16,
-                "theme": {
-                  "mode": "system",
-                },
+                "buffer_font_size": 16
+                }
               }
             '';
           };

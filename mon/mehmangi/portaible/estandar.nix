@@ -36,7 +36,11 @@
             librewolf.enable = true;
           };
           yongu = {
-            fuzzel.enable = true;
+            fuzzel = {
+              enable = true;
+              energi.enable = true;
+              soti.enable = true;
+            };
           };
           produti = {
             neovim.enable = true;

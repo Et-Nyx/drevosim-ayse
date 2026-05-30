@@ -14,7 +14,7 @@
         environment.systemPackages = [ misuKwm ];
         services.displayManager.sessionPackages = [ misuKwm ];
         environment.sessionVariables.RIVER_WM = "${misuKwm}/bin/kwm";
-        users.users.eter.maid = {
+        users.users.${config.taluji.userName}.maid = {
           file.xdg_config."kwm/config.zon" = {
             text = /* zig */ ''
             .{
@@ -83,10 +83,33 @@
                         // --- Gaps ---
                         .{ .keysym = "bracketleft", .modifiers = .{ .mod4 = true, .shift = true }, .event = .{ .click = .{ .pressed = .{ .modify_gap = .{ .step = -2 } } } } },
                         .{ .keysym = "bracketright", .modifiers = .{ .mod4 = true, .shift = true }, .event = .{ .click = .{ .pressed = .{ .modify_gap = .{ .step = 2 } } } } },
+
+                        // --- Media keys (function row) ---
+                        .{ .keysym = "XF86AudioRaiseVolume", .modifiers = .{}, .event = .{ .click = .{ .pressed = .{ .spawn_shell = .{ .cmd = "pamixer -i 5 && pamixer --get-volume > $XDG_RUNTIME_DIR/wob.fifo" } } } } },
+                        .{ .keysym = "XF86AudioLowerVolume", .modifiers = .{}, .event = .{ .click = .{ .pressed = .{ .spawn_shell = .{ .cmd = "pamixer -d 5 && pamixer --get-volume > $XDG_RUNTIME_DIR/wob.fifo" } } } } },
+                        .{ .keysym = "XF86AudioMute", .modifiers = .{}, .event = .{ .click = .{ .pressed = .{ .spawn_shell = .{ .cmd = "pamixer -t && pamixer --get-volume > $XDG_RUNTIME_DIR/wob.fifo" } } } } },
+                        .{ .keysym = "XF86MonBrightnessUp", .modifiers = .{}, .event = .{ .click = .{ .pressed = .{ .spawn_shell = .{ .cmd = "brightnessctl set 5%+ && brightnessctl -m | cut -d, -f4 | tr -d '%' > $XDG_RUNTIME_DIR/wob.fifo" } } } } },
+                        .{ .keysym = "XF86MonBrightnessDown", .modifiers = .{}, .event = .{ .click = .{ .pressed = .{ .spawn_shell = .{ .cmd = "brightnessctl set 5%- && brightnessctl -m | cut -d, -f4 | tr -d '%' > $XDG_RUNTIME_DIR/wob.fifo" } } } } },
+
+                        // --- Fuzzel menus ---
+                        .{ .keysym = "p", .modifiers = .{ .mod4 = true, .shift = true }, .event = .{ .click = .{ .pressed = .{ .spawn = .{ .argv = .{ "fuzzel-energi" } } } } } },
+                        .{ .keysym = "a", .modifiers = .{ .mod4 = true, .shift = true }, .event = .{ .click = .{ .pressed = .{ .spawn = .{ .argv = .{ "fuzzel-soti" } } } } } },
                     },
                     .pointer = .{
                         .{ .button = .left, .modifiers = .{ .mod4 = true }, .event = .{ .pressed = .pointer_move } },
                         .{ .button = .right, .modifiers = .{ .mod4 = true }, .event = .{ .pressed = .pointer_resize } },
+                    },
+                },
+                .bar = .{
+                    .status = .{
+                        // Static label for now — future iterations can switch to
+                        // .{ .fifo = "…" } for live volume/battery indicators.
+                        .data = .{ .text = "[soti] [energi]" },
+                        .click = .{
+                            .left  = .{ .spawn = .{ .argv = .{ "fuzzel-soti"   } } },
+                            .right = .{ .spawn = .{ .argv = .{ "fuzzel-energi" } } },
+                            // .middle reserved for the next menu (bluetooth, wifi, brilho).
+                        },
                     },
                 },
             }
@@ -98,6 +121,10 @@
   perSystem =
   { pkgs, ... }:
   let
+    # Zig package-hash directory names below mirror entries in kwm's build.zig.zon.
+    # Whenever `kwm-src` (or its kwim subdep) moves to a new revision, re-derive the
+    # hashed names from the upstream zon manifests and regenerate the sha256s, or the
+    # sandboxed build will fail / fall back to the network.
     kwm-deps = {
       xkbcommon = pkgs.fetchzip {
         url = "https://codeberg.org/ifreund/zig-xkbcommon/archive/v0.3.0.tar.gz";

@@ -14,7 +14,7 @@
           kanshi
           wlr-randr
         ];
-        users.users.eter.maid = {
+        users.users.${config.taluji.userName}.maid = {
           file.xdg_config."kanshi/config" = {
             text = ''
               profile undocked {

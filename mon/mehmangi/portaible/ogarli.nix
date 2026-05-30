@@ -3,19 +3,21 @@
   flake.nixosModules.portaibleOgarli =
   { pkgs, config, ... }:
   {
+    taluji.userName = "eter";
+
     age.secrets.eter-password = {
       file = self + "/siri/portaible-eter-password.age";
     };
 
     users.mutableUsers = false;
-    users.users.eter = {
+    users.users.${config.taluji.userName} = {
       description = "ET";
       hashedPasswordFile = config.age.secrets.eter-password.path;
       isNormalUser = true;
       useDefaultShell = true;
       extraGroups = [
         "networkmanager"
-          "wheel"
+        "wheel"
       ];
       maid = {
         systemd.globalEnvironment = {
@@ -24,7 +26,7 @@
         };
       };
     };
-    programs.ssh.extraConfig = ''
+    programs.ssh.extraConfig = /* bash */ ''
       Host gitlab.com
       User git
       IdentityFile ~/.ssh/gitlab/gitlab_ed25519
