@@ -40,6 +40,9 @@
         # Java
         jdk
         jdt-language-server
+
+        # JSON
+        package-version-server
       ];
     };
   };

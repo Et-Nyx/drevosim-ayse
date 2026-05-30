@@ -16,15 +16,22 @@
       users.users.${config.taluji.userName}.maid = {
         file.xdg_config."zed/settings.json" = {
           text = builtins.toJSON {
+            lsp = {
+              package-version-server = {
+                binary = {
+                  path = "package-version-server";
+                };
+              };
+            };
             vim_mode = true;
             format_on_save = "off";
             theme = {
-              mode = "system";
+              mode = "dark";
               dark = "Zedwaita Dark";
               light = "Zedwaita Light";
             };
             icon_theme = {
-              mode = "system";
+              mode = "dark";
               dark = "Colored Zed Icon Theme Dark";
               light = "Colored Zed Icon Theme White";
             };
