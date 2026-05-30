@@ -13,6 +13,7 @@
       environment.systemPackages = with pkgs; [
         # Nix
         nil
+        nixd
         nixpkgs-fmt
 
         # Zig
