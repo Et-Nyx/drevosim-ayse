@@ -101,22 +101,6 @@
         "type": "github"
       }
     },
-    "kwm-src": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1776909846,
-        "narHash": "sha256-x4k+e9PE2z51UMVO862lILJrPGRrqkpzfFJKeIPF2hU=",
-        "owner": "kewuaa",
-        "repo": "kwm",
-        "rev": "5120ed09ea17eb84744a76878a7bd1baf1d824a8",
-        "type": "github"
-      },
-      "original": {
-        "owner": "kewuaa",
-        "repo": "kwm",
-        "type": "github"
-      }
-    },
     "nix-maid": {
       "locked": {
         "lastModified": 1775372244,
@@ -148,14 +132,30 @@
         "type": "github"
       }
     },
+    "nixpkgs-stable": {
+      "locked": {
+        "lastModified": 1781216227,
+        "narHash": "sha256-9mUW6gNwoN2SWc/l0fW4svPNOulXLl8ijqKyeSOGgJE=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "a0374025a863d007d98e3297f6aa46cc3141c2f0",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "ref": "nixos-26.05",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "agenix": "agenix",
         "flake-parts": "flake-parts",
         "import-tree": "import-tree",
-        "kwm-src": "kwm-src",
         "nix-maid": "nix-maid",
         "nixpkgs": "nixpkgs",
+        "nixpkgs-stable": "nixpkgs-stable",
         "wrapper-modules": "wrapper-modules"
       }
     },
