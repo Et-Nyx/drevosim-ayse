@@ -6,6 +6,7 @@
       inputs.agenix.nixosModules.default
       self.nixosModules.portaibleEstrutur
       self.nixosModules.portaibleOgarli
+      self.nixosModules.monEstandar
       ({ ... }:
       {
 
