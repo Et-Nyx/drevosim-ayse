@@ -1,7 +1,7 @@
-{ self, inputs, ... }:
+{ self, ... }:
 {
   flake.nixosModules.portaibleOgarli =
-  { pkgs, config, ... }:
+  { config, ... }:
   {
     taluji.userName = "eter";
 
@@ -19,17 +19,6 @@
         "networkmanager"
         "wheel"
       ];
-      maid = {
-        systemd.globalEnvironment = {
-          XDG_CURRENT_DESKTOP = "river";
-          EDITOR = "nvim";
-        };
-      };
     };
-    programs.ssh.extraConfig = /* bash */ ''
-      Host gitlab.com
-      User git
-      IdentityFile ~/.ssh/gitlab/gitlab_ed25519
-    '';
   };
 }

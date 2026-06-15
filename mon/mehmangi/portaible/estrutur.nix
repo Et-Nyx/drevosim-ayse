@@ -1,4 +1,4 @@
-{ self, inputs, ... }:
+{ self, ... }:
 {
   flake.nixosModules.portaibleEstrutur =
     { config, pkgs, ... }:
@@ -12,7 +12,7 @@
       };
 
       users.users.root.hashedPasswordFile = config.age.secrets.root-password.path;
-      
+
       # Flakes
       nix.settings.experimental-features = [
         "nix-command"
@@ -73,7 +73,7 @@
 
       # List packages installed in system profile. To search, run:
       # $ nix search wget
-      environment.systemPackages = with pkgs; [
+      environment.systemPackages = [
         #  vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
         #  wget
       ];

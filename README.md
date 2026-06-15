@@ -1,4 +1,4 @@
-# Taluji
+# Drevosim
 
 A modular and highly structured NixOS configuration flake currently managing the `portaible` setup (an external HD install) and designed to scale for future hosts.
 
@@ -6,7 +6,7 @@ A modular and highly structured NixOS configuration flake currently managing the
 
 ## System Architecture
 
-The Taluji configuration uses a modular, feature-driven architecture. Rather than maintaining monolithic configuration files for each machine, the system is broken down into granular, reusable modules (features). These features—such as desktop environments, terminal emulators, services, and productivity tools—can be selectively enabled or configured per host. 
+The Drevosim configuration uses a modular, feature-driven architecture. Rather than maintaining monolithic configuration files for each machine, the system is broken down into granular, reusable modules (features). These features—such as desktop environments, terminal emulators, services, and productivity tools—can be selectively enabled or configured per host. 
 
 Secret management is handled securely via `agenix`, keeping sensitive data like passwords encrypted within the repository.
 
@@ -26,7 +26,7 @@ Other notable inputs include `nix-wrapper-modules` for wrapping packages, `nix-m
 The repository is organized into distinct logical zones. 
 
 ```text
-Taluji/
+Drevosim/
 ├── flake.nix        # Flake inputs and automated output generation
 ├── README.md        # This file
 ├── mon/             # Root directory for all system and feature modules
