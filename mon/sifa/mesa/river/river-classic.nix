@@ -26,7 +26,7 @@
         inherit pkgs;
         imports = [ wlib.modules.default ];
         package = pkgs.river-classic;
-        files."share/river/init".source = config.init;
+        files."share/river/init".source = opsyon.init;
         env.XDG_CONFIG_HOME = "${placeholder "out"}/share";
       })
     );
