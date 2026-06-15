@@ -9,7 +9,7 @@
     ];
 
     flake.nixosModules.monEstandar =
-    { ... }:
+    { lib, ... }:
     {
       options.drevosim.userName = lib.mkOption {
         type = lib.types.str;
