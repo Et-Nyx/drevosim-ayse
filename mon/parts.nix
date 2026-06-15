@@ -1,4 +1,4 @@
-{ ... }:
+{ lib, ... }:
 {
   config = {
     systems = [
@@ -7,5 +7,10 @@
       "aarch64-linux"
       "aarch64-darwin"
     ];
+    options.drevosim.userName = lib.mkOption {
+      type = lib.types.str;
+      default = "eter";
+      description = "The username to use for the Drevosim nix-maid";
+    };
   };
 }
