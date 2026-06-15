@@ -7,10 +7,15 @@
       "aarch64-linux"
       "aarch64-darwin"
     ];
-    option.drevosim.userName = lib.mkOption {
-      type = lib.types.str;
-      default = "eter";
-      description = "The username to use for the Drevosim nix-maid";
+
+    flake.nixosModules.monEstandar =
+    { ... }:
+    {
+      options.drevosim.userName = lib.mkOption {
+        type = lib.types.str;
+        default = "eter";
+        description = "The username to use for the Drevosim nix-maid";
+      };
     };
   };
 }
