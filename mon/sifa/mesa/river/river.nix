@@ -36,6 +36,10 @@
               ${lib.concatStringsSep "\n" config.autostart}
               exec ${lib.getExe config.janela}
             '';
+            builder = ''
+              cp "$1" "$2"
+              chmod +x "$2"
+            '';
           };
           env.XDG_CONFIG_HOME = "${placeholder "out"}/config";
         };
