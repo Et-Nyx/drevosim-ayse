@@ -26,7 +26,7 @@
       ];
       zigBuildFlags = [
         "--system"
-        "${pkgs.callPackage "${self}/offolo/rill.nix"}"
+        "${pkgs.callPackage "${self}/offolo/rill.nix" {}}"
       ];
       installPhase = ''
         install -Dm755 zig-out/bin/rill $out/bin/rill
