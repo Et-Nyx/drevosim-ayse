@@ -37,7 +37,7 @@
               exec ${lib.getExe config.janela}
             '';
           };
-          env.XDG_CURRENT_DESKTOP = "${placeholder "out"}/config";
+          env.XDG_CURRENT_HOME = "${placeholder "out"}/config";
         };
       })
       {
