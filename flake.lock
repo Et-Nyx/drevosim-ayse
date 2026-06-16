@@ -148,6 +148,18 @@
         "type": "github"
       }
     },
+    "rill": {
+      "flake": false,
+      "locked": {
+        "narHash": "sha256-Y7K81HclYu1vfKtVyaU9PdNpa48ExiHuLa0gklWFjQY=",
+        "type": "file",
+        "url": "https://codeberg.org/lzj15/rill"
+      },
+      "original": {
+        "type": "file",
+        "url": "https://codeberg.org/lzj15/rill"
+      }
+    },
     "root": {
       "inputs": {
         "agenix": "agenix",
@@ -156,6 +168,7 @@
         "nix-maid": "nix-maid",
         "nixpkgs": "nixpkgs",
         "nixpkgs-stable": "nixpkgs-stable",
+        "rill": "rill",
         "wrapper-modules": "wrapper-modules"
       }
     },
