@@ -1,30 +1,34 @@
 # Drevosim
 
-A dendritic NixOS configuration with standalone home-manager dotfiles, built on [flake-parts](https://github.com/hercules-ci/flake-parts), [import-tree](https://github.com/vic/import-tree), [nix-wrapper-modules](https://github.com/BirdeeHub/nix-wrapper-modules), and [nix-maid](https://github.com/viperML/nix-maid).
+A dendritic NixOS configuration with homeless dotfiles, built on [flake-parts](https://github.com/hercules-ci/flake-parts), [import-tree](https://github.com/vic/import-tree), [nix-wrapper-modules](https://github.com/BirdeeHub/nix-wrapper-modules), and [nix-maid](https://github.com/viperML/nix-maid).
 
-The layout branches like a tree: a single flake root feeds a trunk of module directories, which split into hosts and features, which split again into smaller, composable units.
+The layout branches like a tree: a single flake root feeds a trunk of module directories, which split into hosts, features, helpers, and secrets.
 
 ## Layout
 
 ```text
 .
-├── flake.nix      # flake definition
-├── mon/           # module tree
-│   ├── parts.nix  # flake-parts configuration
-│   ├── mehmangi/  # host machines
-│   │   ├── ayse/
+├── flake.nix         # flake definition
+├── mon/              # module tree (imported recursively by import-tree)
+│   ├── parts.nix     # flake-parts configuration + shared options
+│   ├── mehmangi/     # host machines
 │   │   └── portaible/
-│   └── sifa/      # feature modules
-│       ├── kolor/     # customization
-│       ├── kuflu/     # security & login
-│       ├── medya/     # media programs
-│       ├── mesa/      # window managers & compositors
-│       ├── produti/   # productivity tools
-│       ├── programa/  # general programs
-│       ├── servi/     # services
-│       ├── terminal/  # console tools
-│       └── yuxi/      # gaming packages
-└── siri/          # secrets managed by agenix
+│   │       ├── estandar.nix   # host assembler
+│   │       ├── estrutur.nix   # base system config
+│   │       ├── hardwer.nix    # hardware config
+│   │       └── ogarli.nix     # user config
+│   └── sifa/         # feature modules
+│       └── mesa/     # window managers & compositors
+│           └── river/
+│               ├── river.nix   # river wrapper module
+│               ├── rill.nix    # rill wrapper module
+│               └── faylu/      # rill configuration files
+│                   └── rill.zon
+├── offolo/           # offline / external build dependencies
+│   └── rill.nix      # zig dependencies for rill
+├── yongu/            # helper functions
+│   └── monlari.nix   # recursive NixOS module collector
+└── siri/             # secrets managed by agenix
 ```
 
 ## Naming
@@ -37,10 +41,11 @@ Most directory and file names use a small project-specific vocabulary instead of
 | `mehmangi` | machines / hosts |
 | `sifa` | features / capabilities |
 | `siri` | secrets |
+| `basi` | shared base options |
 | `ayse` | (reserved for additional hosts) |
 | `portaible` | portable NixOS host |
-| `estandar` | standard / base host configuration |
-| `estrutur` | structure / system structure |
+| `estandar` | standard / host configuration assembler |
+| `estrutur` | structure / base system config |
 | `hardwer` | hardware configuration |
 | `ogarli` | user configuration |
 | `kolor` | theming & customization |
@@ -52,48 +57,69 @@ Most directory and file names use a small project-specific vocabulary instead of
 | `servi` | services |
 | `terminal` | terminal/console tools |
 | `yuxi` | gaming |
+| `offolo` | offline / external build dependencies |
+| `yongu` | helper functions |
+| `monlari` | recursive module collector |
+| `faylu` | configuration files |
+| `misuRill` | wrapped rill package |
+| `misuRiver` | wrapped river package |
 
-## Flake inputs
+## How modules are loaded
+
+`import-tree ./mon` recursively imports every `.nix` file under `mon/` as a flake-parts module. Each module can export `flake.nixosModules.<path>`.
+
+Host configs do not list feature modules individually. Instead, `mon/mehmangi/portaible/estandar.nix` uses `yongu.monlari` to recursively collect all modules under `self.nixosModules.sifa` and `self.nixosModules.portaible`:
 
 ```nix
+{ self, inputs, ... }:
+let
+  lib = inputs.nixpkgs.lib;
+  yongu = import "${self}/yongu/monlari.nix" { inherit lib; };
+in
 {
-  inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-26.05";
-    nix-maid.url = "github:viperML/nix-maid";
-    import-tree.url = "github:vic/import-tree";
-    flake-parts = {
-      url = "github:hercules-ci/flake-parts";
-      inputs.nixpkgs-lib.follows = "nixpkgs";
-    };
-    wrapper-modules = {
-      url = "github:BirdeeHub/nix-wrapper-modules";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    agenix = {
-      url = "github:ryantm/agenix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-  };
+  flake.nixosConfigurations.portaible = inputs.nixpkgs.lib.nixosSystem {
+    modules = [
+      inputs.nix-maid.nixosModules.default
+      inputs.agenix.nixosModules.default
+      self.nixosModules.basi
 
-  outputs = inputs: inputs.flake-parts.lib.mkFlake
-    { inherit inputs; }
-    (inputs.import-tree ./mon);
+      ({ ... }: {
+        imports =
+          yongu.monlari (self.nixosModules.sifa or {}) ++
+          yongu.monlari (self.nixosModules.portaible or {});
+      })
+    ];
+  };
 }
 ```
 
-`import-tree ./mon` recursively imports the entire `mon/` directory as flake-parts modules, so adding a new file under `mon/mehmangi/` or `mon/sifa/` automatically becomes part of the flake outputs.
+`yongu/monlari.nix` walks nested attribute sets and collects every function it finds, so it does not matter whether a module is exported as `sifa.river`, `sifa.mesa.river`, or `sifa.mesa.river.classic`.
+
+## Wrapper modules
+
+The project uses nix-wrapper-modules to create homeless, store-path-based configurations for programs. Each wrapper sets `XDG_CONFIG_HOME` to a generated directory inside the Nix store, so the programs read their configs from there instead of from `~/.config`.
+
+### Rill
+
+`mon/sifa/mesa/river/rill.nix` packages and wraps [rill](https://codeberg.org/lzj15/rill), a scrolling window manager for river. Because rill is not in nixpkgs, it is built from source with `pkgs.fetchFromCodeberg`. Its Zig dependencies are vendored in `offolo/rill.nix`.
+
+The wrapped package is `.#misuRill`. It bakes `mon/sifa/mesa/river/faylu/rill.zon` into the store and sets `XDG_CONFIG_HOME` so rill finds its config.
+
+### River
+
+`mon/sifa/mesa/river/river.nix` wraps the [river](https://codeberg.org/river/river) Wayland compositor. The wrapper generates `river/init`, which execs the wrapped rill, and sets `XDG_CONFIG_HOME` so river finds its init file.
+
+The wrapped package is `.#misuRiver`.
 
 ## Hosts
 
-The only host defined so far is `portaible`. It is assembled in `mon/mehmangi/portaible/estandar.nix` from:
+The only host defined so far is `portaible`. It is assembled automatically from:
 
-- `nix-maid.nixosModules.default` — home-manager style user setup
-- `agenix.nixosModules.default` — secret decryption
-- `self.nixosModules.portaibleEstrutur` — base system config
-- `self.nixosModules.portaibleOgarli` — user config
-- `self.nixosModules.monEstandar` — shared defaults (default username, etc.)
-- `self.nixosModules.portaibleHardwer` — hardware configuration
+- `inputs.nix-maid.nixosModules.default` — nix-maid user environment
+- `inputs.agenix.nixosModules.default` — secret decryption
+- `self.nixosModules.basi` — shared options (`drevosim.userName`)
+- `self.nixosModules.portaible.*` — host-specific modules (`estrutur`, `hardwer`, `ogarli`)
+- `self.nixosModules.sifa.*` — feature modules (`mesa.river`, `mesa.rill`)
 
 ## Secrets
 
@@ -110,6 +136,14 @@ Build the `portaible` configuration:
 
 ```bash
 nixos-rebuild switch --flake .#portaible
+```
+
+Build or run the wrapped packages directly:
+
+```bash
+nix build .#misuRill
+nix build .#misuRiver
+nix run .#misuRiver
 ```
 
 Update and switch after editing secrets:
