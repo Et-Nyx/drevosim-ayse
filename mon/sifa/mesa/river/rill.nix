@@ -47,10 +47,13 @@
           type = lib.types.path;
           description = "Path to the rill config.zon file";
         };
-        config.package = self'.packages.rill;
-        config.constructFiles.rill-config = {
-          relPath = "config/rill/config.zon";
-          content = builtins.readFile config.configPath;
+        config = {
+          package = self'.packages.rill;
+          constructFiles.rill-config = {
+            relPath = "config/rill/config.zon";
+            content = builtins.readFile config.configPath;
+          };
+          env.XDG_CONFIG_HOME = "${placeholder "out"}/config";
         };
       })
       {
