@@ -9,7 +9,6 @@ in
       inputs.nix-maid.nixosModules.default
       inputs.agenix.nixosModules.default
       self.nixosModules.basi
-
       ({ ... }:
       {
         imports =
