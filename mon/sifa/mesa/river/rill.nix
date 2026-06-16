@@ -29,6 +29,7 @@
       buildInputs = with pkgs; [
         wayland
         wayland-protocols
+        libxkbcommon
       ];
       zigBuildFlags = [
         "--system"
