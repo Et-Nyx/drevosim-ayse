@@ -1,4 +1,4 @@
-{ linkFarm, fetchzip, fetchgit, ... }:
+{ linkFarm, fetchzip, ... }:
 linkFarm "zig-packages" [
   {
     name = "wayland-0.6.0-lQa1kqz8AQADQmdNJsNhLoNHcnEGEUjrOaPV-dtEnEmX";
