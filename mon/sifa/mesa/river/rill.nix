@@ -4,7 +4,7 @@
   { pkgs, ... }:
   {
     environment.systemPackages = [
-      self.packages.${pkgs.stdenv.hostPlatform.system}.rill
+      self.packages.${pkgs.stdenv.hostPlatform.system}.misuRill
     ];
   };
 

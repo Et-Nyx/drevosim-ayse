@@ -4,7 +4,7 @@
   { pkgs, ... }:
   {
     services.displayManager.sessionPackages = [
-      self.packages.${pkgs.stdenv.hostPlatform.system}.river
+      self.packages.${pkgs.stdenv.hostPlatform.system}.misuRiver
     ];
   };
 
