@@ -15,7 +15,12 @@
     packages.rill = pkgs.stdenv.mkDerivation {
       name = "rill";
       version = "0.5.0";
-      src = inputs.rill;
+      src = pkgs.fetchFromCodeberg {
+        owner = "lzj15";
+        repo = "rill";
+        rev = "main";
+        sha256 = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+      };
       nativeBuildInputs = with pkgs; [
         zig_0_15
         wayland-scanner

@@ -16,11 +16,6 @@
       url = "github:ryantm/agenix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
-    rill = {
-      url = "https://codeberg.org/lzj15/rill";
-      flake = false;
-    };
   };
   outputs = inputs: inputs.flake-parts.lib.mkFlake
   { inherit inputs; }
