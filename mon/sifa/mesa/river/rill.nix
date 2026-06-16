@@ -22,7 +22,7 @@
         sha256 = "sha256-sIrzqbTmCbulZgtyY1jD+F/Y0GCp4fL53t1iv0aViiw=";
       };
       nativeBuildInputs = with pkgs; [
-        zig_0_15
+        zig_0_16
         wayland-scanner
       ];
       buildInputs = with pkgs; [
