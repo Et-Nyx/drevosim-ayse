@@ -1,12 +1,8 @@
 { self, ... }:
 {
-  flake.nixosModules.portaibleEstrutur =
+  flake.nixosModules.portaible.estrutur =
     { config, pkgs, ... }:
     {
-      imports = [
-        self.nixosModules.portaibleHardwer
-      ];
-
       age.secrets.root-password = {
         file = self + "/siri/portaible-root-password.age";
       };

@@ -1,16 +1,14 @@
 { self, ... }:
 {
-  flake.nixosModules.portaibleOgarli =
+  flake.nixosModules.portaible.ogarli =
   { config, ... }:
   {
-    drevosim.userName = "eter";
-
     age.secrets.eter-password = {
       file = self + "/siri/portaible-eter-password.age";
     };
 
     users.mutableUsers = false;
-    users.users.${config.drevosim.userName} = {
+    users.users.eter = {
       description = "ET";
       hashedPasswordFile = config.age.secrets.eter-password.path;
       isNormalUser = true;
@@ -18,6 +16,7 @@
       extraGroups = [
         "networkmanager"
         "wheel"
+        "libvirtd"
       ];
     };
   };

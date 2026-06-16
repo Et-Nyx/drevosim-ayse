@@ -1,6 +1,6 @@
 { self, inputs, ... }:
 {
-  flake.nixosModules.river =
+  flake.nixosModules.sifa.mesa.river =
   { pkgs, ... }:
   {
     services.displayManager.sessionPackages = [

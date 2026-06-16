@@ -1,6 +1,6 @@
 { self, inputs, ... }:
 {
-  flake.nixosModules.rill =
+  flake.nixosModules.sifa.mesa.rill =
   { pkgs, ... }:
   {
     environment.systemPackages = [

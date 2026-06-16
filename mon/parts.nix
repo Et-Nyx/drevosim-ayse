@@ -8,7 +8,7 @@
       "aarch64-darwin"
     ];
 
-    flake.nixosModules.monEstandar =
+    flake.nixosModules.basi =
     { lib, ... }:
     {
       options.drevosim.userName = lib.mkOption {

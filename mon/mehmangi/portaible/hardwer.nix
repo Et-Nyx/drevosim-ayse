@@ -1,6 +1,6 @@
 { ... }:
 {
-  flake.nixosModules.portaibleHardwer =
+  flake.nixosModules.portaible.hardwer =
   { config, lib, modulesPath, ... }:
   {
     imports = [
