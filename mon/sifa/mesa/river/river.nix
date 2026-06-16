@@ -34,7 +34,7 @@
             content = ''
               #!${lib.getExe pkgs.bash}
               ${lib.concatStringsSep "\n" config.autostart}
-              exec ${lib.getExe config.windowManager}
+              exec ${lib.getExe config.janela}
             '';
           };
           env.XDG_CURRENT_DESKTOP = "${placeholder "out"}/config";
@@ -42,7 +42,7 @@
       })
       {
         inherit pkgs;
-        windowManager = self'.packages.misuRill;
+        janela = self'.packages.misuRill;
         autostart = [ ];
       }
     ];
