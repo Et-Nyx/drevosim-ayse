@@ -19,7 +19,7 @@
         owner = "lzj15";
         repo = "rill";
         rev = "main";
-        sha256 = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+        sha256 = "sha256-sIrzqbTmCbulZgtyY1jD+F/Y0GCp4fL53t1iv0aViiw=";
       };
       nativeBuildInputs = with pkgs; [
         zig_0_15
