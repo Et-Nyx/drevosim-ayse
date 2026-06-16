@@ -58,7 +58,7 @@
       })
       {
         inherit pkgs;
-        configPath = ./config.zon;
+        configPath = ./faylu/rill.zon;
       }
     ];
   };
