@@ -23,6 +23,7 @@
       };
       nativeBuildInputs = with pkgs; [
         zig
+        pkg-config
         wayland-scanner
       ];
       buildInputs = with pkgs; [
