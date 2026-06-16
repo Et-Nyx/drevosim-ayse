@@ -18,7 +18,6 @@
       src = inputs.rill;
       nativeBuildInputs = with pkgs; [
         zig_0_15
-        pkgs-config
         wayland-scanner
       ];
       buildInputs = with pkgs; [
