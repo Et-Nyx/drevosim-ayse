@@ -32,7 +32,7 @@
         install -Dm755 zig-out/bin/rill $out/bin/rill
       '';
     };
-    packages.misuRill = inputs.wrapper-modules.lib.wrapperPackage [
+    packages.misuRill = inputs.wrapper-modules.lib.wrapPackage [
       ({ config, lib, wlib, ... }:
       {
         imports = [ wlib.modules.default ];
