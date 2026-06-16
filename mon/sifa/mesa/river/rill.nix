@@ -14,7 +14,7 @@
   {
     packages.rill = pkgs.stdenv.mkDerivation {
       name = "rill";
-      version = "0.5.0";
+      version = "0.6.0";
       src = pkgs.fetchFromCodeberg {
         owner = "lzj15";
         repo = "rill";
