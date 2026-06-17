@@ -13,6 +13,7 @@
         rev = "refs/tags/v${version}";
         sha256 = "sha256-sIrzqbTmCbulZgtyY1jD+F/Y0GCp4fL53t1iv0aViiw=";
       };
+      cargoHash = lib.fakeHash;
       nativeBuildInputs = with pkgs; [
         pkg-config
         clang
