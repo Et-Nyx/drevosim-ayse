@@ -14,6 +14,13 @@ in
         imports =
           yongu.monlari (self.nixosModules.sifa or {}) ++
           yongu.monlari (self.nixosModules.portaible or {});
+
+        drevosim = {
+          mesa.river = {
+            enable = true;
+            janela = "canoe";
+          };
+        };
       })
     ];
   };

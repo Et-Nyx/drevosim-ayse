@@ -72,6 +72,6 @@ in
   { pkgs, self', lib, ... }:
   lib.mkIf pkgs.stdenv.hostPlatform.isLinux
   {
-    packages.misuRiver = faleRiver pkgs self'.packages.misuRill [ ];
+    packages.misuRiver = faleRiver pkgs self'.packages.misuCanoe [ ];
   };
 }

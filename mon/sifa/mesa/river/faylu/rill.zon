@@ -98,7 +98,7 @@
     .{ .key = "Escape", .modifiers = .{ .mod4 = true }, .action = .exit },
     .{ .key = "r", .modifiers = .{ .mod4 = true }, .action = .reload_config },
 
-    .{ .key = "t", .modifiers = .{ .mod4 = true }, .action = .{ .spawn = .{"alacritty"} } },
+    .{ .key = "t", .modifiers = .{ .mod4 = true }, .action = .{ .spawn = .{"ghostty"} } },
 
     .{
       .key = "XF86AudioRaiseVolume",

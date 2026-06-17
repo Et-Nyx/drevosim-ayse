@@ -7,7 +7,7 @@ main_modifier = "super"
 
 # Default programs.
 # Each can be a single string (split on whitespace) or an array of arguments.
-terminal_cmd = "alacritty"
+terminal_cmd = "ghostty"
 launcher_cmd = "fuzzel"
 lock_cmd = "swaylock"
 
