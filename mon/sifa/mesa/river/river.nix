@@ -24,17 +24,19 @@ let
         };
         config = {
           package = pkgs.river;
-          constructFiles.river-init = {
-            relPath = "config/river/init";
-            content = ''
-              #!${lib.getExe pkgs.bash}
-              ${lib.concatStringsSep "\n" config.awto}
-              exec ${lib.getExe config.janela}
-            '';
-            builder = ''
-              cp "$1" "$2"
-              chmod +x "$2"
-            '';
+          constructFiles = {
+            river-init = {
+              relPath = "config/river/init";
+              content = ''
+                #!${lib.getExe pkgs.bash}
+                ${lib.concatStringsSep "\n" config.awto}
+                exec ${lib.getExe config.janela}
+              '';
+              builder = ''
+                cp "$1" "$2"
+                chmod +x "$2"
+              '';
+            };
             river-desktop = {
               relPath = "share/wayland-sessions/river.desktop";
               content = builtins.readFile "${pkgs.river}/share/wayland-sessions/river.desktop";
