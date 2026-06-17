@@ -13,7 +13,7 @@
         rev = "refs/tags/v${version}";
         hash = lib.fakeSha256;
       };
-      cargoHash = lib.fakeSha256;
+      cargoHash = lib.fakeHash;
       nativeBuildInputs = with pkgs; [
         pkg-config
         clang
