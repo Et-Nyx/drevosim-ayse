@@ -20,6 +20,7 @@ in
             enable = true;
             janela = "canoe";
           };
+          kuflu.ly.enable = true;
         };
       })
     ];
