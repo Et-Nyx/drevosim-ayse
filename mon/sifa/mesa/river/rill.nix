@@ -13,7 +13,7 @@
   lib.mkIf pkgs.stdenv.hostPlatform.isLinux
   {
     packages.rill = pkgs.stdenv.mkDerivation {
-      name = "rill";
+      pname = "rill";
       version = "0.6.0";
       src = pkgs.fetchFromCodeberg {
         owner = "lzj15";
