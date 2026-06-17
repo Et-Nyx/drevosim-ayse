@@ -41,7 +41,7 @@
       {
         imports = [ wlib.modules.default ];
         options.configPath = lib.mkOption {
-          type = lib.type.path;
+          type = lib.types.path;
           description = "Path to the canoe config.toml file";
         };
         config = {
