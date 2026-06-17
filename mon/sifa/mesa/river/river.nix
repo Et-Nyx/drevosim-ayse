@@ -35,10 +35,10 @@ let
               cp "$1" "$2"
               chmod +x "$2"
             '';
-          };
-          river-desktop = {
-            relPath = "share/wayland-sessions/river.desktop";
-            content = builtins.readFile "${pkgs.river}/share/wayland-sessions/river.desktop";
+            river-desktop = {
+              relPath = "share/wayland-sessions/river.desktop";
+              content = builtins.readFile "${pkgs.river}/share/wayland-sessions/river.desktop";
+            };
           };
           env.XDG_CONFIG_HOME = "${placeholder "out"}/config";
         };
