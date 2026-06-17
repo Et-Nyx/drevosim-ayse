@@ -19,5 +19,16 @@
         "libvirtd"
       ];
     };
+
+    users.users.test = {
+      description = "Test user";
+      password = "test";
+      isNormalUser = true;
+      useDefaultShell = true;
+      extraGroups = [
+        "wheel"
+        "networkmanager"
+      ];
+    };
   };
 }
