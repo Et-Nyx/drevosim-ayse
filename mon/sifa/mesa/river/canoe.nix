@@ -1,5 +1,11 @@
 { self, inputs, ... }:
 {
+  flake.nixosModules.canoe =
+  {}:
+  {
+
+  };
+
   perSystem =
   { pkgs, self', lib, ... }:
   lib.mkIf pkgs.stdenv.hostPlatform.isLinux
@@ -11,9 +17,9 @@
         owner = "roblillack";
         repo = "canoe";
         rev = "refs/tags/v${version}";
-        sha256 = "sha256-sIrzqbTmCbulZgtyY1jD+F/Y0GCp4fL53t1iv0aViiw=";
+        hash = "sha256-oHaoeLQhj0L+1URXIrgfuFkAScXVVWqDiGdxq14zUqI=";
       };
-      cargoHash = lib.fakeHash;
+      cargoHash = "sha256-qMzqyZ6dSyIYhsXBjvtSiX4pptKP+6G3fze8NSPeza4=";
       nativeBuildInputs = with pkgs; [
         pkg-config
         clang
@@ -30,5 +36,27 @@
       };
       meta.mainProgram = "canoe";
     };
+    packages.misuCanoe = inputs.wrapper-modules.lib.wrapPackage [
+      ({ config, lib, wlib, ... }:
+      {
+        imports = [ wlib.modules.default ];
+        options.configPath = lib.mkOption {
+          type = lib.type.path;
+          description = "Path to the canoe config.toml file";
+        };
+        config = {
+          package = self'.packages.canoe;
+          constructFiles.canoe-config = {
+            relPath = "config/canoe/canoe.toml";
+            content = builtins.readFile config.configPath;
+          };
+          env.XDG_CONFIG_HOME = "${placeholder "out"}/config";
+        };
+      })
+      {
+        inherit pkgs;
+        configPath = ./faylu/canoe.toml;
+      }
+    ];
   };
 }

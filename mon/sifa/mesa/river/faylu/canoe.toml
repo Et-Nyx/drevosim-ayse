@@ -1,0 +1,11 @@
+main_modifier = "super"
+
+terminal_cmd = "alacritty"
+launcher_cmd = "fuzzel"
+lock_cmd = "swaylock"
+
+[ui]
+border_width = 2
+border_active = { outer = "#FFD000", mid = "#000000", inner = "#FFD000" }
+border_inactive = { outer = "#404040", mid = "#404040", inner = "#404040" }
+desktop_background = "#101010"
