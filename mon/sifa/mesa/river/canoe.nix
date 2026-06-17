@@ -11,9 +11,8 @@
         owner = "roblillack";
         repo = "canoe";
         rev = "refs/tags/v${version}";
-        hash = lib.fakeSha256;
+        sha256 = "sha256-sIrzqbTmCbulZgtyY1jD+F/Y0GCp4fL53t1iv0aViiw=";
       };
-      cargoHash = lib.fakeHash;
       nativeBuildInputs = with pkgs; [
         pkg-config
         clang
