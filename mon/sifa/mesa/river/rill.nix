@@ -1,13 +1,5 @@
 { self, inputs, ... }:
 {
-  flake.nixosModules.sifa.mesa.rill =
-  { pkgs, ... }:
-  {
-    environment.systemPackages = [
-      self.packages.${pkgs.stdenv.hostPlatform.system}.misuRill
-    ];
-  };
-
   perSystem =
   { pkgs, self', lib, ... }:
   lib.mkIf pkgs.stdenv.hostPlatform.isLinux

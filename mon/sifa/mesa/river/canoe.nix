@@ -1,11 +1,5 @@
-{ self, inputs, ... }:
+{ inputs, ... }:
 {
-  flake.nixosModules.canoe =
-  {}:
-  {
-
-  };
-
   perSystem =
   { pkgs, self', lib, ... }:
   lib.mkIf pkgs.stdenv.hostPlatform.isLinux
