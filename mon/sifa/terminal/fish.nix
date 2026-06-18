@@ -16,7 +16,7 @@ in
   flake.nixosModules.sifa.terminal.fish =
   { config, lib, pkgs, ... }:
   let
-    cfg = config.drevosim.terminal.fish;
+    opsyon = config.drevosim.terminal.fish;
   in
   {
     options.drevosim.terminal.fish = {
@@ -38,13 +38,13 @@ in
       };
     };
 
-    config = lib.mkIf cfg.enable {
+    config = lib.mkIf opsyon.enable {
       environment.systemPackages = [
-        (mkMisuFish pkgs { config = cfg.config; aliases = cfg.shellAliases; })
+        (mkMisuFish pkgs { config = opsyon.config; aliases = opsyon.shellAliases; })
       ];
 
-      users.defaultUserShell = lib.mkIf cfg.defaultUserShell
-        (mkMisuFish pkgs { config = cfg.config; aliases = cfg.shellAliases; });
+      users.defaultUserShell = lib.mkIf opsyon.defaultUserShell
+        (mkMisuFish pkgs { config = opsyon.config; aliases = opsyon.shellAliases; });
     };
   };
 

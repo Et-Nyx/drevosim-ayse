@@ -25,9 +25,12 @@ in
             foot.enable = true;
             fish = {
               enable = true;
+              defaultUserShell = false;
+            };
+            nushell = {
+              enable = true;
               defaultUserShell = true;
             };
-            nushell.enable = true;
           };
         };
       })
