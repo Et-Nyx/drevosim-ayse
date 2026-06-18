@@ -13,7 +13,7 @@ let
       text = "";
     };
   in
-  pkgs.writeShellScriptBin "nu" ''
+  (pkgs.writeShellScriptBin "nu" ''
     if [ -n "$HOME" ]; then
       export XDG_CONFIG_HOME="$HOME/.config"
     else
@@ -28,7 +28,9 @@ let
     ${pkgs.coreutils}/bin/cp -f ${envNu} "$XDG_CONFIG_HOME/nushell/env.nu"
 
     exec ${pkgs.nushell}/bin/nu "$@"
-  '';
+  '').overrideAttrs (old: {
+    passthru = (old.passthru or {}) // { shellPath = "/bin/nu"; };
+  });
 in
 {
   flake.nixosModules.sifa.terminal.nushell =
