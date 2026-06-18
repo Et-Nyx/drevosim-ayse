@@ -2,7 +2,7 @@
 let
   mkMisuWaylock = pkgs:
     pkgs.writeShellScriptBin "waylock" ''
-      exec ${pkgs.waylock}/bin/waylock -init-color 1e1e1e -input-color ffd000 "$@"
+      exec ${pkgs.waylock}/bin/waylock "$@"
     '';
 in
 {
