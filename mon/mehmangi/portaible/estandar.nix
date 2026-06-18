@@ -23,7 +23,10 @@ in
           };
           terminal = {
             foot.enable = true;
-            fish.enable = true;
+            fish = {
+              enable = true;
+              defaultUserShell = true;
+            };
             nushell.enable = true;
           };
         };

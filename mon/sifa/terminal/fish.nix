@@ -21,6 +21,11 @@ in
   {
     options.drevosim.terminal.fish = {
       enable = lib.mkEnableOption "fish shell";
+      defaultUserShell = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        description = "Set fish as the system-wide default login shell";
+      };
       config = lib.mkOption {
         type = lib.types.lines;
         default = defaultConfig;
@@ -37,6 +42,9 @@ in
       environment.systemPackages = [
         (mkMisuFish pkgs { config = cfg.config; aliases = cfg.shellAliases; })
       ];
+
+      users.defaultUserShell = lib.mkIf cfg.defaultUserShell
+        (mkMisuFish pkgs { config = cfg.config; aliases = cfg.shellAliases; });
     };
   };
 

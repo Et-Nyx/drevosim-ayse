@@ -30,6 +30,11 @@ in
   {
     options.drevosim.terminal.nushell = {
       enable = lib.mkEnableOption "nushell";
+      defaultUserShell = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        description = "Set nushell as the system-wide default login shell";
+      };
       config = lib.mkOption {
         type = lib.types.lines;
         default = defaultConfig;
@@ -39,6 +44,9 @@ in
 
     config = lib.mkIf cfg.enable {
       environment.systemPackages = [ (mkMisuNushell pkgs cfg.config) ];
+
+      users.defaultUserShell = lib.mkIf cfg.defaultUserShell
+        (mkMisuNushell pkgs cfg.config);
     };
   };
 
