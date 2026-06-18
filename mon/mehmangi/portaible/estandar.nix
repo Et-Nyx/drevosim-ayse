@@ -16,15 +16,18 @@ in
           yongu.monlari (self.nixosModules.portaible or {});
 
         drevosim = {
-          kuflu.ly = {
-            enable = true;
-            settings = {
-              bigclock = "en";
+          kuflu = {
+            ly = {
+              enable = true;
+              settings = {
+                bigclock = "en";
+              };
             };
+            swaylock.enable = true;
           };
           mesa.river = {
             enable = true;
-            janela = "rill";
+            janela = "canoe";
           };
           terminal = {
             foot.enable = true;

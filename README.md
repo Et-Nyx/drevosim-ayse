@@ -24,8 +24,10 @@ The layout branches like a tree: a single flake root feeds a trunk of module dir
 │   └── sifa/         # feature modules
 │       ├── kuflu/    # security & login
 │       │   ├── ly.nix           # ly display-manager module
+│       │   ├── swaylock.nix     # swaylock screen locker module
 │       │   └── faylu/
-│       │       └── ly.ini       # ly configuration file
+│       │       ├── ly.ini       # ly configuration file
+│       │       └── swaylock.conf # swaylock configuration file
 │       ├── mesa/     # window managers & compositors
 │       │   └── river/
 │       │       ├── river.nix    # river wrapper module
@@ -56,7 +58,8 @@ The layout branches like a tree: a single flake root feeds a trunk of module dir
 │   └── rill.nix      # zig dependencies for rill
 ├── yongu/            # helper functions
 │   ├── monlari.nix   # recursive NixOS module collector
-│   └── parseIni.nix  # pure-Nix INI parser for faylu files
+│   ├── parseIni.nix  # pure-Nix INI parser for faylu files
+│   └── parseSwaylock.nix # pure-Nix swaylock config parser
 └── siri/             # secrets managed by agenix
 ```
 
@@ -95,12 +98,14 @@ Most directory and file names use a small project-specific vocabulary instead of
 | `yongu` | helper functions |
 | `monlari` | recursive module collector |
 | `parseIni` | pure-Nix INI parser |
+| `parseSwaylock` | pure-Nix swaylock config parser |
 | `faylu` | configuration files |
 | `misuRill` | wrapped rill package |
 | `misuRiver` | wrapped river package |
 | `misuCanoe` | wrapped canoe package |
 | `misuFoot` | wrapped foot package |
 | `misuFuzzel` | wrapped fuzzel package |
+| `misuSwaylock` | wrapped swaylock package |
 | `misuFish` | wrapped fish package |
 | `misuNushell` | wrapped nushell package |
 
@@ -149,7 +154,10 @@ Feature modules expose options under `drevosim.<category>.<module>` so they can 
 
 ```nix
 drevosim = {
-  kuflu.ly.enable = true;
+  kuflu = {
+    ly.enable = true;
+    swaylock.enable = true;
+  };
   mesa.river = {
     enable = true;
     janela = "canoe";   # "rill" | "canoe"
@@ -209,6 +217,12 @@ Because the NixOS ly module already supplies correct defaults for paths, session
 
 The wrapped package is `.#misuFuzzel`. It is enabled with `drevosim.programa.fuzzel.enable = true`.
 
+### Swaylock
+
+`mon/sifa/kuflu/swaylock.nix` wraps [swaylock](https://github.com/swaywm/swaylock), a screen locker for Wayland. It reads its default config from `mon/sifa/kuflu/faylu/swaylock.conf` via `yongu/parseSwaylock.nix`.
+
+The wrapped package is `.#misuSwaylock`. It is enabled with `drevosim.kuflu.swaylock.enable = true`. The module also creates the PAM service required for swaylock to authenticate.
+
 ### Terminal programs
 
 `mon/sifa/terminal/` contains wrapped terminal programs:
@@ -256,6 +270,7 @@ nix build .#misuCanoe
 nix build .#misuRiver
 nix build .#misuFoot
 nix build .#misuFuzzel
+nix build .#misuSwaylock
 nix build .#misuFish
 nix build .#misuNushell
 nix run .#misuRiver
