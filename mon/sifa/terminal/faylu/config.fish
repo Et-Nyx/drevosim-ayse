@@ -15,3 +15,10 @@
 #   if status is-interactive
 #       ...
 #   end
+
+# Because this wrapped fish is launched with --no-config, the default
+# fish_greeting is not printed automatically. Re-enable it for interactive
+# shells so the normal startup message is shown.
+if status is-interactive
+    fish_greeting
+end
