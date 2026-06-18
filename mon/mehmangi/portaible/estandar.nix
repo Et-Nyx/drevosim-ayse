@@ -24,6 +24,7 @@ in
               };
             };
             swaylock.enable = true;
+            waylock.enable = true;
           };
           mesa.river = {
             enable = true;

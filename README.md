@@ -25,6 +25,7 @@ The layout branches like a tree: a single flake root feeds a trunk of module dir
 │       ├── kuflu/    # security & login
 │       │   ├── ly.nix           # ly display-manager module
 │       │   ├── swaylock.nix     # swaylock screen locker module
+│       │   ├── waylock.nix      # waylock screen locker module
 │       │   └── faylu/
 │       │       ├── ly.ini       # ly configuration file
 │       │       └── swaylock.conf # swaylock configuration file
@@ -106,6 +107,7 @@ Most directory and file names use a small project-specific vocabulary instead of
 | `misuFoot` | wrapped foot package |
 | `misuFuzzel` | wrapped fuzzel package |
 | `misuSwaylock` | wrapped swaylock package |
+| `misuWaylock` | wrapped waylock package |
 | `misuFish` | wrapped fish package |
 | `misuNushell` | wrapped nushell package |
 
@@ -157,6 +159,7 @@ drevosim = {
   kuflu = {
     ly.enable = true;
     swaylock.enable = true;
+    waylock.enable = true;
   };
   mesa.river = {
     enable = true;
@@ -223,6 +226,12 @@ The wrapped package is `.#misuFuzzel`. It is enabled with `drevosim.programa.fuz
 
 The wrapped package is `.#misuSwaylock`. It is enabled with `drevosim.kuflu.swaylock.enable = true`. The module also creates the PAM service required for swaylock to authenticate.
 
+### Waylock
+
+`mon/sifa/kuflu/waylock.nix` wraps [waylock](https://codeberg.org/ifreund/waylock), a minimal Wayland screen locker. waylock has no config file; the wrapper passes default flags (`-init-color`, `-input-color`) and creates the PAM service required for authentication.
+
+The wrapped package is `.#misuWaylock`. It is enabled with `drevosim.kuflu.waylock.enable = true`.
+
 ### Terminal programs
 
 `mon/sifa/terminal/` contains wrapped terminal programs:
@@ -271,6 +280,7 @@ nix build .#misuRiver
 nix build .#misuFoot
 nix build .#misuFuzzel
 nix build .#misuSwaylock
+nix build .#misuWaylock
 nix build .#misuFish
 nix build .#misuNushell
 nix run .#misuRiver
