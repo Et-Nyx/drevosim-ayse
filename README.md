@@ -38,14 +38,18 @@ The layout branches like a tree: a single flake root feeds a trunk of module dir
 │       │           ├── canoe.toml
 │       │           └── rill.zon
 │       ├── medya/    # audio / video
-│       │   └── pipewire.nix     # PipeWire + WirePlumber audio stack
+│       │   ├── pipewire.nix     # PipeWire + WirePlumber audio stack
+│       │   └── tul.nix          # simple media/brightness utilities
 │       ├── programa/ # general programs
 │       │   ├── fuzzel.nix       # fuzzel launcher module
 │       │   ├── tul.nix          # simple config-free tools
 │       │   └── faylu/
 │       │       └── fuzzel.ini   # fuzzel configuration file
 │       ├── servi/    # system services
-│       │   └── openssh.nix      # OpenSSH daemon
+│       │   ├── openssh.nix      # OpenSSH daemon
+│       │   ├── mako.nix         # mako notification daemon
+│       │   └── faylu/
+│       │       └── mako.ini     # mako configuration file
 │       └── terminal/ # terminal/console tools
 │           ├── foot.nix
 │           ├── fish.nix
@@ -108,6 +112,7 @@ Most directory and file names use a small project-specific vocabulary instead of
 | `misuFuzzel` | wrapped fuzzel package |
 | `misuSwaylock` | wrapped swaylock package |
 | `misuWaylock` | wrapped waylock package |
+| `misuMako` | wrapped mako package |
 | `misuFish` | wrapped fish package |
 | `misuNushell` | wrapped nushell package |
 
@@ -161,6 +166,7 @@ drevosim = {
     swaylock.enable = true;
     waylock.enable = true;
   };
+  servi.mako.enable = true;
   mesa.river = {
     enable = true;
     janela = "canoe";   # "rill" | "canoe"
@@ -232,6 +238,12 @@ The wrapped package is `.#misuSwaylock`. It is enabled with `drevosim.kuflu.sway
 
 The wrapped package is `.#misuWaylock`. It is enabled with `drevosim.kuflu.waylock.enable = true`.
 
+### Mako
+
+`mon/sifa/servi/mako.nix` wraps [mako](https://github.com/emersion/mako), a lightweight Wayland notification daemon. It reads its default INI config from `mon/sifa/servi/faylu/mako.ini` via `yongu/parseIni.nix`.
+
+The wrapped package is `.#misuMako`. It is enabled with `drevosim.servi.mako.enable = true`.
+
 ### Terminal programs
 
 `mon/sifa/terminal/` contains wrapped terminal programs:
@@ -252,7 +264,7 @@ The only host defined so far is `portaible`. It is assembled automatically from:
 - `inputs.agenix.nixosModules.default` — secret decryption
 - `self.nixosModules.basi` — shared base config (`drevosim.userName`, nix settings, unfree)
 - `self.nixosModules.portaible.*` — host-specific modules (`estandar`, `ogarli`, `loka`, `nukleus.*`)
-- `self.nixosModules.sifa.*` — feature modules (`kuflu.ly`, `mesa.river`, `medya.pipewire`, `programa.*`, `servi.openssh`, `terminal.*`)
+- `self.nixosModules.sifa.*` — feature modules (`kuflu.ly`, `mesa.river`, `medya.pipewire`, `medya.tul`, `programa.*`, `servi.openssh`, `servi.mako`, `terminal.*`)
 
 ## Secrets
 
@@ -281,6 +293,7 @@ nix build .#misuFoot
 nix build .#misuFuzzel
 nix build .#misuSwaylock
 nix build .#misuWaylock
+nix build .#misuMako
 nix build .#misuFish
 nix build .#misuNushell
 nix run .#misuRiver

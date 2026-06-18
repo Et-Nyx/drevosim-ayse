@@ -44,6 +44,9 @@ in
           programa = {
             fuzzel.enable = true;
           };
+          servi = {
+            mako.enable = true;
+          };
         };
       })
     ];
