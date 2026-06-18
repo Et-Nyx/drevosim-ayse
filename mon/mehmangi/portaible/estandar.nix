@@ -19,17 +19,17 @@ in
           kuflu.ly.enable = true;
           mesa.river = {
             enable = true;
-            janela = "canoe";
+            janela = "rill";
           };
           terminal = {
             foot.enable = true;
             fish = {
               enable = true;
-              defaultUserShell = false;
+              defaultUserShell = true;
             };
             nushell = {
               enable = true;
-              defaultUserShell = true;
+              defaultUserShell = false;
             };
           };
         };
