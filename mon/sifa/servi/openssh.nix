@@ -1,6 +1,7 @@
 { ... }:
 {
   flake.nixosModules.sifa.servi.openssh =
+  { ... }:
   {
     services.openssh = {
       enable = true;

@@ -1,6 +1,7 @@
 { ... }:
 {
   flake.nixosModules.portaible.loka =
+  { ... }:
   {
     # Set your time zone.
     time.timeZone = "America/Fortaleza";
