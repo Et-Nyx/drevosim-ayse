@@ -2,10 +2,24 @@
 let
   defaultConfig = builtins.readFile ./faylu/config.nu;
 
-  mkMisuNushell = pkgs: config: inputs.wrapper-modules.wrappers.nushell.wrap {
-    inherit pkgs;
-    "config.nu".content = config;
-  };
+  mkMisuNushell = pkgs: config:
+  let
+    wrapped = inputs.wrapper-modules.wrappers.nushell.wrap {
+      inherit pkgs;
+      "config.nu".content = config;
+    };
+  in
+  pkgs.runCommand "misuNushell"
+  {
+    nativeBuildInputs = [ pkgs.makeWrapper ];
+    passthru.shellPath = "${wrapped.passthru.shellPath}";
+  }
+  ''
+    mkdir -p $out/bin
+    makeWrapper ${wrapped}/bin/nu $out/bin/nu \
+      --run 'export XDG_CONFIG_HOME="''${XDG_CONFIG_HOME:-$HOME/.config}"' \
+      --run 'mkdir -p "$XDG_CONFIG_HOME/nushell"'
+  '';
 in
 {
   flake.nixosModules.sifa.terminal.nushell =
