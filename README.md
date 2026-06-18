@@ -10,11 +10,14 @@ The layout branches like a tree: a single flake root feeds a trunk of module dir
 .
 ├── flake.nix         # flake definition
 ├── mon/              # module tree (imported recursively by import-tree)
-│   ├── parts.nix     # flake-parts configuration + shared options
+│   ├── parts.nix     # flake-parts configuration
+│   ├── basi.nix      # shared base options (drevosim.userName, nix settings, unfree)
 │   ├── mehmangi/     # host machines
 │   │   └── portaible/
 │   │       ├── estandar.nix   # host assembler
-│   │       ├── estrutur.nix   # base system config
+│   │       ├── estrutur.nix   # base host config (secrets, hostname, network, stateVersion)
+│   │       ├── boot.nix       # bootloader and kernel
+│   │       ├── locale.nix     # timezone, locale, and keymaps
 │   │       ├── hardwer.nix    # hardware config
 │   │       └── ogarli.nix     # user config
 │   └── sifa/         # feature modules
@@ -30,6 +33,10 @@ The layout branches like a tree: a single flake root feeds a trunk of module dir
 │       │       └── faylu/       # rill/canoe configuration files
 │       │           ├── canoe.toml
 │       │           └── rill.zon
+│       ├── medya/    # audio / video
+│       │   └── pipewire.nix     # PipeWire + WirePlumber audio stack
+│       ├── servi/    # system services
+│       │   └── openssh.nix      # OpenSSH daemon
 │       └── terminal/ # terminal/console tools
 │           ├── foot.nix
 │           ├── fish.nix
@@ -199,9 +206,9 @@ The only host defined so far is `portaible`. It is assembled automatically from:
 
 - `inputs.nix-maid.nixosModules.default` — nix-maid user environment
 - `inputs.agenix.nixosModules.default` — secret decryption
-- `self.nixosModules.basi` — shared options (`drevosim.userName`)
-- `self.nixosModules.portaible.*` — host-specific modules (`estrutur`, `hardwer`, `ogarli`)
-- `self.nixosModules.sifa.*` — feature modules (`kuflu.ly`, `mesa.river`, `terminal.*`)
+- `self.nixosModules.basi` — shared base config (`drevosim.userName`, nix settings, unfree)
+- `self.nixosModules.portaible.*` — host-specific modules (`estrutur`, `boot`, `locale`, `hardwer`, `ogarli`)
+- `self.nixosModules.sifa.*` — feature modules (`kuflu.ly`, `mesa.river`, `medya.pipewire`, `servi.openssh`, `terminal.*`)
 
 ## Secrets
 
