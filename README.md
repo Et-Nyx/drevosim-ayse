@@ -19,10 +19,9 @@ The layout branches like a tree: a single flake root feeds a trunk of module dir
 │   │       └── ogarli.nix     # user config
 │   └── sifa/         # feature modules
 │       ├── kuflu/    # security & login
-│       │   └── ly/
-│       │       ├── ly.nix       # ly display-manager module
-│       │       └── faylu/
-│       │           └── ly.ini   # ly configuration file
+│       │   ├── ly.nix           # ly display-manager module
+│       │   └── faylu/
+│       │       └── ly.ini       # ly configuration file
 │       ├── mesa/     # window managers & compositors
 │       │   └── river/
 │       │       ├── river.nix    # river wrapper module
@@ -140,9 +139,13 @@ drevosim = {
     foot.enable = true;
     fish = {
       enable = true;
+      defaultUserShell = true;
       shellAliases.ll = "ls -la";
     };
-    nushell.enable = true;
+    nushell = {
+      enable = true;
+      defaultUserShell = false;
+    };
   };
 };
 ```
@@ -187,6 +190,8 @@ Because the NixOS ly module already supplies correct defaults for paths, session
 - `nushell.nix` — reads `faylu/config.nu` as raw text
 
 The wrapped packages are `.#misuFoot`, `.#misuFish`, and `.#misuNushell`. Their NixOS options remain overridable from `estandar.nix`, while their default contents live in syntax-highlighted faylu files.
+
+`foot` and `fish` use nix-wrapper-modules directly. `nushell` deviates slightly: because nushell writes runtime files (`history.txt`, `plugin.nu`) next to its config, it cannot keep `XDG_CONFIG_HOME` in the read-only store. Instead, `.#misuNushell` copies `config.nu` and `env.nu` into a writable directory (`~/.config/nushell` when `HOME` is set, otherwise `/run/user/<uid>/nushell` or `/tmp/nushell-<uid>`) before launching the real nushell binary. It also exposes `shellPath = "/bin/nu"` so it can be used as `users.defaultUserShell`.
 
 ## Hosts
 
