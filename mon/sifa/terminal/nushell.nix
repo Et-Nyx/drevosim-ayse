@@ -1,0 +1,37 @@
+{ inputs, ... }:
+let
+  defaultConfig = builtins.readFile ./faylu/config.nu;
+
+  mkMisuNushell = pkgs: config: inputs.wrapper-modules.wrappers.nushell.wrap {
+    inherit pkgs;
+    "config.nu".content = config;
+  };
+in
+{
+  flake.nixosModules.sifa.terminal.nushell =
+  { config, lib, pkgs, ... }:
+  let
+    cfg = config.drevosim.terminal.nushell;
+  in
+  {
+    options.drevosim.terminal.nushell = {
+      enable = lib.mkEnableOption "nushell";
+      config = lib.mkOption {
+        type = lib.types.lines;
+        default = defaultConfig;
+        description = "Content of config.nu";
+      };
+    };
+
+    config = lib.mkIf cfg.enable {
+      environment.systemPackages = [ (mkMisuNushell pkgs cfg.config) ];
+    };
+  };
+
+  perSystem =
+  { pkgs, lib, ... }:
+  lib.mkIf pkgs.stdenv.hostPlatform.isLinux
+  {
+    packages.misuNushell = mkMisuNushell pkgs defaultConfig;
+  };
+}

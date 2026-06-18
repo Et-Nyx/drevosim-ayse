@@ -5,7 +5,7 @@ let
     rill = "misuRill";
     canoe = "misuCanoe";
   };
-  faleRiver = pkgs: janelaPkt: awto:
+  mkMisuRiver = pkgs: janelaPkt: awto:
   let
     lifafa = inputs.wrapper-modules.lib.wrapPackage [
       ({ config, lib, wlib, ... }:
@@ -60,7 +60,7 @@ in
   { config, pkgs, lib, ... }:
   let
     opsyon = config.drevosim.mesa.river;
-    misuRiver = faleRiver pkgs self.packages.${pkgs.stdenv.hostPlatform.system}.${harita.${opsyon.janela}} [ ];
+    misuRiver = mkMisuRiver pkgs self.packages.${pkgs.stdenv.hostPlatform.system}.${harita.${opsyon.janela}} [ ];
   in
   {
     options.drevosim.mesa.river = {
@@ -81,6 +81,6 @@ in
   { pkgs, self', lib, ... }:
   lib.mkIf pkgs.stdenv.hostPlatform.isLinux
   {
-    packages.misuRiver = faleRiver pkgs self'.packages.misuRill [ ];
+    packages.misuRiver = mkMisuRiver pkgs self'.packages.misuRill [ ];
   };
 }

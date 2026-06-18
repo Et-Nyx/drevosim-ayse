@@ -16,11 +16,16 @@ in
           yongu.monlari (self.nixosModules.portaible or {});
 
         drevosim = {
+          kuflu.ly.enable = true;
           mesa.river = {
             enable = true;
             janela = "canoe";
           };
-          kuflu.ly.enable = true;
+          terminal = {
+            foot.enable = true;
+            fish.enable = true;
+            nushell.enable = true;
+          };
         };
       })
     ];

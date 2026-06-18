@@ -19,5 +19,5 @@
   };
   outputs = inputs: inputs.flake-parts.lib.mkFlake
   { inherit inputs; }
-  (inputs.import-tree ./mon);
+  (inputs.import-tree.filterNot (p: inputs.nixpkgs.lib.hasInfix "/faylu/" p) ./mon);
 }
