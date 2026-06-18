@@ -7,11 +7,6 @@
       file = self + "/siri/portaible-root-password.age";
     };
 
-    # agenix needs an identity path to decrypt secrets.
-    # This is normally provided by the OpenSSH module, but we set it
-    # explicitly so decryption works regardless of module ordering.
-    age.identityPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
-
     users.users.root.hashedPasswordFile = config.age.secrets.root-password.path;
 
     networking.hostName = "portaible"; # Define your hostname.

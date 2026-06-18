@@ -15,11 +15,12 @@ The layout branches like a tree: a single flake root feeds a trunk of module dir
 │   ├── mehmangi/     # host machines
 │   │   └── portaible/
 │   │       ├── estandar.nix   # host assembler
-│   │       ├── estrutur.nix   # base host config (secrets, hostname, network, stateVersion)
-│   │       ├── boot.nix       # bootloader and kernel
-│   │       ├── locale.nix     # timezone, locale, and keymaps
-│   │       ├── hardwer.nix    # hardware config
-│   │       └── ogarli.nix     # user config
+│   │       ├── ogarli.nix     # user config
+│   │       ├── loka.nix       # timezone, locale, and keymaps
+│   │       └── nukleus/       # core host config
+│   │           ├── estrutur.nix
+│   │           ├── hardwer.nix
+│   │           └── xoru.nix
 │   └── sifa/         # feature modules
 │       ├── kuflu/    # security & login
 │       │   ├── ly.nix           # ly display-manager module
@@ -35,6 +36,11 @@ The layout branches like a tree: a single flake root feeds a trunk of module dir
 │       │           └── rill.zon
 │       ├── medya/    # audio / video
 │       │   └── pipewire.nix     # PipeWire + WirePlumber audio stack
+│       ├── programa/ # general programs
+│       │   ├── fuzzel.nix       # fuzzel launcher module
+│       │   ├── tul.nix          # simple config-free tools
+│       │   └── faylu/
+│       │       └── fuzzel.ini   # fuzzel configuration file
 │       ├── servi/    # system services
 │       │   └── openssh.nix      # OpenSSH daemon
 │       └── terminal/ # terminal/console tools
@@ -45,6 +51,7 @@ The layout branches like a tree: a single flake root feeds a trunk of module dir
 │               ├── foot.ini
 │               ├── config.fish
 │               └── config.nu
+
 ├── offolo/           # offline / external build dependencies
 │   └── rill.nix      # zig dependencies for rill
 ├── yongu/            # helper functions
@@ -70,6 +77,9 @@ Most directory and file names use a small project-specific vocabulary instead of
 | `estrutur` | structure / base system config |
 | `hardwer` | hardware configuration |
 | `ogarli` | user configuration |
+| `loka` | locale, timezone, and keymaps |
+| `xoru` | core boot / kernel config |
+| `nukleus` | core host configuration directory |
 | `kolor` | theming & customization |
 | `kuflu` | security & login |
 | `ly` | ly TUI display manager |
@@ -79,6 +89,7 @@ Most directory and file names use a small project-specific vocabulary instead of
 | `programa` | general programs |
 | `servi` | services |
 | `terminal` | terminal/console tools |
+| `tul` | simple configuration-free tools |
 | `yuxi` | gaming |
 | `offolo` | offline / external build dependencies |
 | `yongu` | helper functions |
@@ -89,6 +100,7 @@ Most directory and file names use a small project-specific vocabulary instead of
 | `misuRiver` | wrapped river package |
 | `misuCanoe` | wrapped canoe package |
 | `misuFoot` | wrapped foot package |
+| `misuFuzzel` | wrapped fuzzel package |
 | `misuFish` | wrapped fish package |
 | `misuNushell` | wrapped nushell package |
 
@@ -154,6 +166,9 @@ drevosim = {
       defaultUserShell = false;
     };
   };
+  programa = {
+    fuzzel.enable = true;
+  };
 };
 ```
 
@@ -188,6 +203,12 @@ The wrapped session package is `.#misuRiver`. It provides a `providedSessions` a
 
 Because the NixOS ly module already supplies correct defaults for paths, session directories, and power commands, the upstream defaults in `ly.ini` that would override those are commented out. Only appearance and behavior overrides are left active.
 
+### Fuzzel
+
+`mon/sifa/programa/fuzzel.nix` wraps [fuzzel](https://codeberg.org/dnkl/fuzzel), a Wayland application launcher. Like `foot`, it reads its default INI config from `mon/sifa/programa/faylu/fuzzel.ini` via `yongu/parseIni.nix`.
+
+The wrapped package is `.#misuFuzzel`. It is enabled with `drevosim.programa.fuzzel.enable = true`.
+
 ### Terminal programs
 
 `mon/sifa/terminal/` contains wrapped terminal programs:
@@ -207,8 +228,8 @@ The only host defined so far is `portaible`. It is assembled automatically from:
 - `inputs.nix-maid.nixosModules.default` — nix-maid user environment
 - `inputs.agenix.nixosModules.default` — secret decryption
 - `self.nixosModules.basi` — shared base config (`drevosim.userName`, nix settings, unfree)
-- `self.nixosModules.portaible.*` — host-specific modules (`estrutur`, `boot`, `locale`, `hardwer`, `ogarli`)
-- `self.nixosModules.sifa.*` — feature modules (`kuflu.ly`, `mesa.river`, `medya.pipewire`, `servi.openssh`, `terminal.*`)
+- `self.nixosModules.portaible.*` — host-specific modules (`estandar`, `ogarli`, `loka`, `nukleus.*`)
+- `self.nixosModules.sifa.*` — feature modules (`kuflu.ly`, `mesa.river`, `medya.pipewire`, `programa.*`, `servi.openssh`, `terminal.*`)
 
 ## Secrets
 
@@ -234,6 +255,7 @@ nix build .#misuRill
 nix build .#misuCanoe
 nix build .#misuRiver
 nix build .#misuFoot
+nix build .#misuFuzzel
 nix build .#misuFish
 nix build .#misuNushell
 nix run .#misuRiver

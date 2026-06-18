@@ -16,7 +16,12 @@ in
           yongu.monlari (self.nixosModules.portaible or {});
 
         drevosim = {
-          kuflu.ly.enable = true;
+          kuflu.ly = {
+            enable = true;
+            settings = {
+              bigclock = "en";
+            };
+          };
           mesa.river = {
             enable = true;
             janela = "rill";
@@ -31,6 +36,9 @@ in
               enable = true;
               defaultUserShell = false;
             };
+          };
+          programa = {
+            fuzzel.enable = true;
           };
         };
       })
