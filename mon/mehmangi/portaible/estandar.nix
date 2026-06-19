@@ -28,7 +28,7 @@ in
           };
           mesa.river = {
             enable = true;
-            janela = "canoe";
+            janela = "rill";
           };
           terminal = {
             foot.enable = true;
@@ -46,6 +46,7 @@ in
           };
           servi = {
             mako.enable = true;
+            polkit.enable = true;
           };
         };
       })
