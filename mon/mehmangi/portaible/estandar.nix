@@ -25,7 +25,6 @@ in
             };
             swaylock.enable = true;
             waylock.enable = true;
-            swayidle.enable = true;
           };
           mesa.river = {
             enable = true;
@@ -47,7 +46,6 @@ in
           };
           servi = {
             mako.enable = true;
-            polkit.enable = true;
           };
         };
       })
