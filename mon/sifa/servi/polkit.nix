@@ -7,14 +7,14 @@
   in
   {
     options.drevosim.servi.polkit = {
-      enable = lib.mkEnableOption "graphical polkit authentication agent";
+      enable = lib.mkEnableOption "polkit authentication agent";
     };
 
     config = lib.mkIf cfg.enable {
       security.polkit.enable = true;
-      environment.systemPackages = [ pkgs.kdePackages.polkit-kde-agent-1 ];
+      environment.systemPackages = [ pkgs.polkit_gnome ];
       drevosim.session.autostart = [
-        "${pkgs.kdePackages.polkit-kde-agent-1}/libexec/polkit-kde-authentication-agent-1"
+        "${pkgs.polkit_gnome}/libexec/polkit-gnome-authentication-agent-1"
       ];
     };
   };

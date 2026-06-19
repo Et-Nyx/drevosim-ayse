@@ -48,6 +48,7 @@ The layout branches like a tree: a single flake root feeds a trunk of module dir
 │       ├── servi/    # system services
 │       │   ├── openssh.nix      # OpenSSH daemon
 │       │   ├── mako.nix         # mako notification daemon
+│       │   ├── polkit.nix       # polkit authentication agent
 │       │   └── faylu/
 │       │       └── mako.ini     # mako configuration file
 │       └── terminal/ # terminal/console tools
@@ -161,12 +162,16 @@ Feature modules expose options under `drevosim.<category>.<module>` so they can 
 
 ```nix
 drevosim = {
+  session.autostart = [ "my-daemon &" ];
   kuflu = {
     ly.enable = true;
     swaylock.enable = true;
     waylock.enable = true;
   };
-  servi.mako.enable = true;
+  servi = {
+    mako.enable = true;
+    polkit.enable = true;
+  };
   mesa.river = {
     enable = true;
     janela = "canoe";   # "rill" | "canoe"
@@ -188,6 +193,10 @@ drevosim = {
   };
 };
 ```
+
+### Session autostart
+
+`mon/basi.nix` exposes `drevosim.session.autostart`, a shared list of shell commands that every graphical session/compositor should run before starting the window manager. Modules like `servi.mako` and `servi.polkit` append their daemons to this list. Compositor modules (currently `mesa.river`) consume the list and background each command with `&`. A compositor-specific `awto` option is still available for commands that should only run under that compositor.
 
 ## Wrapper modules
 
@@ -244,6 +253,10 @@ The wrapped package is `.#misuWaylock`. It is enabled with `drevosim.kuflu.waylo
 
 The wrapped package is `.#misuMako`. It is enabled with `drevosim.servi.mako.enable = true`.
 
+### Polkit
+
+`mon/sifa/servi/polkit.nix` enables the Polkit authorization framework and autostarts a graphical authentication agent (`polkit_gnome`) via `drevosim.session.autostart`. It is enabled with `drevosim.servi.polkit.enable = true`. The agent is required for GUI apps that need elevated privileges (mounting drives, changing network settings, etc.).
+
 ### Terminal programs
 
 `mon/sifa/terminal/` contains wrapped terminal programs:
@@ -264,7 +277,7 @@ The only host defined so far is `portaible`. It is assembled automatically from:
 - `inputs.agenix.nixosModules.default` — secret decryption
 - `self.nixosModules.basi` — shared base config (`drevosim.userName`, nix settings, unfree)
 - `self.nixosModules.portaible.*` — host-specific modules (`estandar`, `ogarli`, `loka`, `nukleus.*`)
-- `self.nixosModules.sifa.*` — feature modules (`kuflu.ly`, `mesa.river`, `medya.pipewire`, `medya.tul`, `programa.*`, `servi.openssh`, `servi.mako`, `terminal.*`)
+- `self.nixosModules.sifa.*` — feature modules (`kuflu.ly`, `mesa.river`, `medya.pipewire`, `medya.tul`, `programa.*`, `servi.openssh`, `servi.mako`, `servi.polkit`, `terminal.*`)
 
 ## Secrets
 
