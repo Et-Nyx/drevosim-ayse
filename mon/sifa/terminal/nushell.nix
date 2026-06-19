@@ -53,12 +53,14 @@ in
       };
     };
 
-    config = lib.mkIf opsyon.enable {
-      environment.systemPackages = [ (mkMisuNushell pkgs opsyon.config) ];
+    config = lib.mkIf opsyon.enable (let
+      misuNushell = mkMisuNushell pkgs opsyon.config;
+    in {
+      environment.systemPackages = [ misuNushell ];
+      environment.shells = [ misuNushell ];
 
-      users.defaultUserShell = lib.mkIf opsyon.defaultUserShell
-        (mkMisuNushell pkgs opsyon.config);
-    };
+      users.defaultUserShell = lib.mkIf opsyon.defaultUserShell misuNushell;
+    });
   };
 
   perSystem =

@@ -38,14 +38,14 @@ in
       };
     };
 
-    config = lib.mkIf opsyon.enable {
-      environment.systemPackages = [
-        (mkMisuFish pkgs { config = opsyon.config; aliases = opsyon.shellAliases; })
-      ];
+    config = lib.mkIf opsyon.enable (let
+      misuFish = mkMisuFish pkgs { config = opsyon.config; aliases = opsyon.shellAliases; };
+    in {
+      environment.systemPackages = [ misuFish ];
+      environment.shells = [ misuFish ];
 
-      users.defaultUserShell = lib.mkIf opsyon.defaultUserShell
-        (mkMisuFish pkgs { config = opsyon.config; aliases = opsyon.shellAliases; });
-    };
+      users.defaultUserShell = lib.mkIf opsyon.defaultUserShell misuFish;
+    });
   };
 
   perSystem =
