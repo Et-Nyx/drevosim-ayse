@@ -3,7 +3,8 @@ let
   inherit (lib.strings) trim;
   inherit (lib) hasPrefix hasSuffix stringLength substring foldl' splitString;
 
-  # Drop inline comments (anything after an unquoted # or ;).
+  # Drop inline comments (anything after an unquoted ;).
+  # # is kept as part of values so hex colors like #1e1e1e are preserved.
   stripInlineComment = value:
     let
       chars = lib.stringToCharacters value;
@@ -41,7 +42,7 @@ let
             escaped = false;
             done = false;
           }
-        else if (c == "#" || c == ";") && !state.inSingle && !state.inDouble then
+        else if c == ";" && !state.inSingle && !state.inDouble then
           {
             inherit (state) result inSingle inDouble escaped;
             done = true;

@@ -60,7 +60,7 @@ in
   { config, pkgs, lib, ... }:
   let
     opsyon = config.drevosim.mesa.river;
-    misuRiver = mkMisuRiver pkgs self.packages.${pkgs.stdenv.hostPlatform.system}.${harita.${opsyon.janela}} [ ];
+    misuRiver = mkMisuRiver pkgs self.packages.${pkgs.stdenv.hostPlatform.system}.${harita.${opsyon.janela}} opsyon.awto;
   in
   {
     options.drevosim.mesa.river = {
@@ -69,6 +69,11 @@ in
         type = lib.types.enum [ "rill" "canoe" ];
         default = "rill";
         description = "Window manager to exec inside river";
+      };
+      awto = lib.mkOption {
+        type = lib.types.listOf lib.types.str;
+        default = [ ];
+        description = "Shell commands to run in river/init before the WM";
       };
     };
     config = lib.mkIf opsyon.enable {
