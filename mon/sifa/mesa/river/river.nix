@@ -29,7 +29,7 @@ let
               relPath = "config/river/init";
               content = ''
                 #!${lib.getExe pkgs.bash}
-                ${lib.concatStringsSep "\n" config.awto}
+                ${lib.concatMapStringsSep "\n" (cmd: "${cmd} &") config.awto}
                 exec ${lib.getExe config.janela}
               '';
               builder = ''
@@ -55,28 +55,29 @@ let
     providedSessions = [ "river" ];
   } lifafa;
 in
-{
-  flake.nixosModules.sifa.mesa.river =
-  { config, pkgs, lib, ... }:
-  let
-    opsyon = config.drevosim.mesa.river;
-    misuRiver = mkMisuRiver pkgs self.packages.${pkgs.stdenv.hostPlatform.system}.${harita.${opsyon.janela}} opsyon.awto;
-  in
   {
-    options.drevosim.mesa.river = {
-      enable = lib.mkEnableOption "river wayland compositor";
-      janela = lib.mkOption {
-        type = lib.types.enum [ "rill" "canoe" ];
-        default = "rill";
-        description = "Window manager to exec inside river";
+    flake.nixosModules.sifa.mesa.river =
+    { config, pkgs, lib, ... }:
+    let
+      opsyon = config.drevosim.mesa.river;
+      awto = config.drevosim.session.autostart ++ opsyon.awto;
+      misuRiver = mkMisuRiver pkgs self.packages.${pkgs.stdenv.hostPlatform.system}.${harita.${opsyon.janela}} awto;
+    in
+    {
+      options.drevosim.mesa.river = {
+        enable = lib.mkEnableOption "river wayland compositor";
+        janela = lib.mkOption {
+          type = lib.types.enum [ "rill" "canoe" ];
+          default = "rill";
+          description = "Window manager to exec inside river";
+        };
+        awto = lib.mkOption {
+          type = lib.types.listOf lib.types.str;
+          default = [ ];
+          description = "River-specific shell commands to run in river/init before the WM";
+        };
       };
-      awto = lib.mkOption {
-        type = lib.types.listOf lib.types.str;
-        default = [ ];
-        description = "Shell commands to run in river/init before the WM";
-      };
-    };
-    config = lib.mkIf opsyon.enable {
+      config = lib.mkIf opsyon.enable {
       services.displayManager.sessionPackages = [ misuRiver ];
       environment.systemPackages = [ misuRiver ];
     };

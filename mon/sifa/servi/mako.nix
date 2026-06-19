@@ -25,6 +25,7 @@ in
 
     config = lib.mkIf cfg.enable {
       environment.systemPackages = [ (mkMisuMako pkgs cfg.settings) ];
+      drevosim.session.autostart = [ "mako" ];
     };
   };
 
