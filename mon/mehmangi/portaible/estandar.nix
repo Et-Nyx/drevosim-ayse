@@ -23,7 +23,6 @@ in
                 bigclock = "en";
               };
             };
-            swaylock.enable = true;
             waylock.enable = true;
           };
           mesa.river = {
