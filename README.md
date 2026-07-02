@@ -10,7 +10,7 @@ The flake is organized in a dendritic (tree-like) structure inspired by [Drevosi
 - **`/nix`**: Dedicated Btrfs subvolume on the SSD, persisted across reboots.
 - **`/persistent`**: Btrfs subvolume on the SSD for system state preserved by `preservation`.
 - **`/home`**: Separate spinning disk (HDD) formatted with Btrfs + zstd compression, persisted normally.
-- **Desktop**: COSMIC (Wayland) with cosmic-greeter.
+- **Desktop**: KDE Plasma 6 with SDDM.
 
 ## File Layout
 
@@ -20,21 +20,24 @@ The flake is organized in a dendritic (tree-like) structure inspired by [Drevosi
 | `flake.lock` | Locked flake input revisions. |
 | `mon/` | Module tree (imported recursively by import-tree). |
 | `mon/parts.nix` | flake-parts `systems` configuration. |
-| `mon/basi.nix` | Shared base options (`drevosim.userName`, nix settings, unfree). |
+| `mon/basi.nix` | Shared base options (`drevosim.userName`, nix settings, GC, unfree). |
 | `yongu/monlari.nix` | Recursive NixOS-module collector used by the host assembler. |
-| `mon/sifa/` | Feature modules (currently stubs with enable options only). |
+| `mon/sifa/` | Feature modules. |
+| `mon/sifa/kolor/` | Theming & customization. |
 | `mon/sifa/kuflu/` | Security & login (ly, swaylock, waylock). |
-| `mon/sifa/mesa/` | Window managers & compositors (river, canoe, rill). |
 | `mon/sifa/medya/` | Audio / video (pipewire, media utilities). |
-| `mon/sifa/programa/` | General programs (fuzzel, simple utilities). |
-| `mon/sifa/servi/` | System services (openssh, mako, polkit). |
-| `mon/sifa/terminal/` | Terminal/console tools (foot, fish, nushell). |
+| `mon/sifa/mesa/` | Window managers, compositors & desktops (Plasma, river, canoe, rill). |
+| `mon/sifa/produti/` | Productivity tools. |
+| `mon/sifa/programa/` | General programs (fuzzel, simple utilities, browsers). |
+| `mon/sifa/servi/` | System services (networkmanager, openssh, mako, polkit). |
+| `mon/sifa/terminal/` | Terminal emulators, shells & generic CLI tools. |
+| `mon/sifa/yuxi/` | Gaming. |
 | `mon/mehmangi/ayse/` | Host configuration for machine `ayse`. |
 | `mon/mehmangi/ayse/estandar.nix` | Host assembler (defines `.#ayse`). |
 | `mon/mehmangi/ayse/ogarli.nix` | User configuration. |
 | `mon/mehmangi/ayse/loka.nix` | Locale, timezone, and keymaps. |
 | `mon/mehmangi/ayse/nukleus/` | Core host configuration. |
-| `mon/mehmangi/ayse/nukleus/estrutur.nix` | Hostname, desktop, services, packages. |
+| `mon/mehmangi/ayse/nukleus/estrutur.nix` | Hostname and host-specific structure. |
 | `mon/mehmangi/ayse/nukleus/hardwer.nix` | Hardware/kernel configuration. |
 | `mon/mehmangi/ayse/nukleus/xoru.nix` | Bootloader configuration. |
 | `mon/mehmangi/ayse/nukleus/disko.nix` | Disk partitioning and filesystem layout. |

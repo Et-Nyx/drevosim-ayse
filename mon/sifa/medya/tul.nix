@@ -1,8 +1,11 @@
-{ lib, ... }:
+{ ... }:
 {
-  options.drevosim.medya.tul = {
-    enable = lib.mkEnableOption "simple media/brightness utilities" // {
-      default = true;
-    };
+  flake.nixosModules.sifa.medya.tul =
+  { pkgs, ... }:
+  {
+    environment.systemPackages = with pkgs; [
+      brightnessctl
+      playerctl
+    ];
   };
 }

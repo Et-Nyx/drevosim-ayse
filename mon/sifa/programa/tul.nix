@@ -1,8 +1,13 @@
-{ lib, ... }:
+{ ... }:
 {
-  options.drevosim.programa.tul = {
-    enable = lib.mkEnableOption "simple Wayland utilities" // {
-      default = true;
-    };
+  flake.nixosModules.sifa.programa.tul =
+  { pkgs, ... }:
+  {
+    environment.systemPackages = with pkgs; [
+      chromium
+      ladybird
+      opencode
+      wget
+    ];
   };
 }
