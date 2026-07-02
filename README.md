@@ -1,6 +1,8 @@
 # NixOS — Impermanent Setup
 
-This repository contains the declarative NixOS configuration for a single machine running an **impermanent** (ephemeral root) setup with [Disko](https://github.com/nix-community/disko) and [preservation](https://github.com/nix-community/preservation).
+This repository contains the declarative NixOS configuration for a single machine (`ayse`) running an **impermanent** (ephemeral root) setup with [Disko](https://github.com/nix-community/disko) and [preservation](https://github.com/nix-community/preservation).
+
+The flake is organized in a dendritic (tree-like) structure inspired by [Drevosim](flakes/drevosim-ayse/README.md): a single flake root feeds a trunk of module directories, which split into hosts, features, helpers, and secrets.
 
 ## Overview
 
@@ -12,18 +14,35 @@ This repository contains the declarative NixOS configuration for a single machin
 
 ## File Layout
 
-| File | Purpose |
-|------|---------|
-| `flake.nix` | Flake inputs (`nixpkgs`, `disko`, `preservation`) and the `nixos` system output. |
-| `configuration.nix` | Main system configuration: boot, networking, desktop, user, packages. |
-| `disko.nix` | Disk partitioning and filesystem layout. **Review disk devices before applying.** |
-| `preservation.nix` | Paths on the ephemeral root that are bind-mounted from `/persistent`. |
-| `hardware-configuration.nix` | Auto-generated kernel modules and CPU microcode settings. |
+| File / Directory | Purpose |
+|------------------|---------|
+| `flake.nix` | Flake inputs and flake-parts + import-tree entry point. |
 | `flake.lock` | Locked flake input revisions. |
+| `mon/` | Module tree (imported recursively by import-tree). |
+| `mon/parts.nix` | flake-parts `systems` configuration. |
+| `mon/basi.nix` | Shared base options (`drevosim.userName`, nix settings, unfree). |
+| `yongu/monlari.nix` | Recursive NixOS-module collector used by the host assembler. |
+| `mon/sifa/` | Feature modules (currently stubs with enable options only). |
+| `mon/sifa/kuflu/` | Security & login (ly, swaylock, waylock). |
+| `mon/sifa/mesa/` | Window managers & compositors (river, canoe, rill). |
+| `mon/sifa/medya/` | Audio / video (pipewire, media utilities). |
+| `mon/sifa/programa/` | General programs (fuzzel, simple utilities). |
+| `mon/sifa/servi/` | System services (openssh, mako, polkit). |
+| `mon/sifa/terminal/` | Terminal/console tools (foot, fish, nushell). |
+| `mon/mehmangi/ayse/` | Host configuration for machine `ayse`. |
+| `mon/mehmangi/ayse/estandar.nix` | Host assembler (defines `.#ayse`). |
+| `mon/mehmangi/ayse/ogarli.nix` | User configuration. |
+| `mon/mehmangi/ayse/loka.nix` | Locale, timezone, and keymaps. |
+| `mon/mehmangi/ayse/nukleus/` | Core host configuration. |
+| `mon/mehmangi/ayse/nukleus/estrutur.nix` | Hostname, desktop, services, packages. |
+| `mon/mehmangi/ayse/nukleus/hardwer.nix` | Hardware/kernel configuration. |
+| `mon/mehmangi/ayse/nukleus/xoru.nix` | Bootloader configuration. |
+| `mon/mehmangi/ayse/nukleus/disko.nix` | Disk partitioning and filesystem layout. |
+| `mon/mehmangi/ayse/nukleus/preservation.nix` | Preservation rules for the ephemeral root. |
 
 ## Disks
 
-Configured in `disko.nix`:
+Configured in `mon/mehmangi/ayse/nukleus/disko.nix`:
 
 - `/dev/nvme0n1` — SSD (boot, swap, `/nix`, `/persistent`)
   - `ESP` (1 GiB, vfat, `/boot`)
@@ -34,7 +53,7 @@ Configured in `disko.nix`:
 - `/dev/sda` — HDD (`/home`)
   - single Btrfs partition with zstd compression
 
-> **Warning:** `disko.nix` references specific device names. Always double-check these paths on the target hardware before running any destructive Disko command.
+> **Warning:** The Disko configuration references specific device names. Always double-check these paths on the target hardware before running any destructive Disko command.
 
 ## Rebuilding the System
 
@@ -47,7 +66,7 @@ sudo nixos-rebuild switch --flake .
 Or explicitly:
 
 ```bash
-sudo nixos-rebuild switch --flake .#nixos
+sudo nixos-rebuild switch --flake .#ayse
 ```
 
 ## Updating
@@ -63,17 +82,17 @@ sudo nixos-rebuild switch --flake .
 
 1. Boot a recent NixOS installer USB.
 2. Connect to the network and clone this repo.
-3. Verify/adjust disk device names in `disko.nix`.
+3. Verify/adjust disk device names in `mon/mehmangi/ayse/nukleus/disko.nix`.
 4. Run Disko to partition and format:
 
    ```bash
-   sudo nix --experimental-features "nix-command flakes" run github:nix-community/disko/latest -- --mode destroy,format,mount ./disko.nix
+   sudo nix --experimental-features "nix-command flakes" run github:nix-community/disko/latest -- --mode destroy,format,mount ./mon/mehmangi/ayse/nukleus/disko.nix
    ```
 
 5. Install NixOS:
 
    ```bash
-   sudo nixos-install --flake .#nixos
+   sudo nixos-install --flake .#ayse
    ```
 
 6. Reboot, set the user password, and continue using `nixos-rebuild switch` as normal.

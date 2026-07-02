@@ -1,0 +1,19 @@
+{ self, inputs, ... }:
+let
+  lib = inputs.nixpkgs.lib;
+  yongu = import "${self}/yongu/monlari.nix" { inherit lib; };
+in
+{
+  flake.nixosConfigurations.ayse = inputs.nixpkgs.lib.nixosSystem {
+    modules = [
+      inputs.disko.nixosModules.disko
+      inputs.preservation.nixosModules.default
+      self.nixosModules.basi
+      ({ ... }: {
+        imports =
+          yongu.monlari (self.nixosModules.sifa or {}) ++
+          yongu.monlari (self.nixosModules.ayse or {});
+      })
+    ];
+  };
+}
