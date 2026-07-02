@@ -34,10 +34,18 @@
   #   useXkbConfig = true; # use xkb.options in tty.
   # };
 
-  # Enable the COSMIC desktop environment (Wayland).
-  services.desktopManager.cosmic.enable = true;
-  services.displayManager.cosmic-greeter.enable = true;
+  #Enable the Desktop Environment (Defaults to Wayland in Plasma 6)
+  services.desktopManager.plasma6.enable = true;
 
+  services.displayManager.sddm = {
+    enable = true;
+    wayland.enable = true;
+  };
+
+  xdg.portal = {
+    enable = true;
+    extraPortals = [ pkgs.kdePackages.xdg-desktop-portal-kde ];
+  };
   # Enable CUPS to print documents.
   # services.printing.enable = true;
 
@@ -86,8 +94,6 @@
     ];
   };
 
-  programs.firefox.enable = true;
-
   # List packages installed in system profile.
   # You can use https://search.nixos.org/ to find more packages (and options).
   environment.systemPackages = with pkgs; [
@@ -96,7 +102,13 @@
     wget
     chromium
     opencode
+    zed-editor
+    nil
+    nixd
   ];
+
+  programs.ladybird.enable = true;
+  programs.nix-ld.enable = true;
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
@@ -139,4 +151,3 @@
   system.stateVersion = "26.05"; # Did you read the comment?
 
 }
-
