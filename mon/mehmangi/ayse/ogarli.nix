@@ -1,18 +1,18 @@
 { ... }:
 {
   flake.nixosModules.ayse.ogarli =
-  { pkgs, ... }:
+  { ... }:
   {
     users.users.eter = {
       isNormalUser = true;
       initialPassword = "1234";
+      useDefaultShell = true;
       extraGroups = [
         "wheel"
         "networkmanager"
+        "libvirtd"
       ];
-      packages = with pkgs; [
-        tree
-      ];
+      packages = [ ];
     };
   };
 }
