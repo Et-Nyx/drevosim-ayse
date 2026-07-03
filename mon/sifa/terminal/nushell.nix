@@ -1,17 +1,74 @@
-{ lib, ... }:
+{ ... }:
+let
+  defaultConfig = builtins.readFile ./faylu/config.nu;
+
+  mkMisuNushell = pkgs: config:
+  let
+    configNu = pkgs.writeTextFile {
+      name = "nushell-config.nu";
+      text = config;
+    };
+    envNu = pkgs.writeTextFile {
+      name = "nushell-env.nu";
+      text = "";
+    };
+  in
+  (pkgs.writeShellScriptBin "nu" ''
+    if [ -n "$HOME" ]; then
+      export XDG_CONFIG_HOME="$HOME/.config"
+    else
+      export XDG_CONFIG_HOME="/run/user/$(${pkgs.coreutils}/bin/id -u)"
+      if [ ! -d "$XDG_CONFIG_HOME" ]; then
+        export XDG_CONFIG_HOME="/tmp/nushell-$(${pkgs.coreutils}/bin/id -u)"
+      fi
+    fi
+
+    ${pkgs.coreutils}/bin/mkdir -p "$XDG_CONFIG_HOME/nushell"
+    ${pkgs.coreutils}/bin/cp -f ${configNu} "$XDG_CONFIG_HOME/nushell/config.nu"
+    ${pkgs.coreutils}/bin/cp -f ${envNu} "$XDG_CONFIG_HOME/nushell/env.nu"
+
+    exec ${pkgs.nushell}/bin/nu "$@"
+  '').overrideAttrs (old: {
+    passthru = (old.passthru or {}) // { shellPath = "/bin/nu"; };
+  });
+in
 {
   flake.nixosModules.sifa.terminal.nushell =
-  { config, ... }:
+  { config, lib, pkgs, ... }:
+  let
+    opsyon = config.drevosim.terminal.nushell;
+  in
   {
     options.drevosim.terminal.nushell = {
       enable = lib.mkEnableOption "nushell" // {
         default = true;
       };
-      defaultUserShell = lib.mkEnableOption "nushell as the default user shell";
+      defaultUserShell = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        description = "Set nushell as the system-wide default login shell";
+      };
+      config = lib.mkOption {
+        type = lib.types.lines;
+        default = defaultConfig;
+        description = "Content of config.nu";
+      };
     };
 
-    config = lib.mkIf config.drevosim.terminal.nushell.enable {
-      # Real nushell config will go here.
-    };
+    config = lib.mkIf opsyon.enable (let
+      misuNushell = mkMisuNushell pkgs opsyon.config;
+    in {
+      environment.systemPackages = [ misuNushell ];
+      environment.shells = [ misuNushell ];
+
+      users.defaultUserShell = lib.mkIf opsyon.defaultUserShell misuNushell;
+    });
+  };
+
+  perSystem =
+  { pkgs, lib, ... }:
+  lib.mkIf pkgs.stdenv.hostPlatform.isLinux
+  {
+    packages.misuNushell = mkMisuNushell pkgs defaultConfig;
   };
 }

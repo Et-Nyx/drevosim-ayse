@@ -66,6 +66,8 @@ The flake is organized in a dendritic (tree-like) structure inspired by [Drevosi
 │       │   ├── nushell.nix
 │       │   ├── tul.nix
 │       │   └── faylu/     # raw config files (filtered from import-tree)
+│       │       ├── config.fish
+│       │       ├── config.nu
 │       │       └── foot.ini
 │       └── yuxi/          # gaming
 │           └── tul.nix
