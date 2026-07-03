@@ -1,0 +1,77 @@
+# Canoe configuration
+# Reload at runtime with: pkill -HUP canoe
+
+# Main modifier key.
+# Recognized: super (alias logo/win/mod4), alt (mod1), ctrl/control, shift, mod3, mod5.
+main_modifier = "super"
+
+# Default programs.
+# Each can be a single string (split on whitespace) or an array of arguments.
+terminal_cmd = "foot"
+launcher_cmd = "fuzzel"
+lock_cmd = "swaylock"
+
+# Hotkeys override built-in shortcuts when they use the same chord.
+# Chords are modifier names joined with +, then the XKB keysym last.
+# Use an array value when an argument contains spaces.
+[hotkeys]
+# "Super+I" = "control-panel"
+# "Super+E" = ["sh", "-c", "notify-send 'hi there' && foot"]
+
+[ui]
+# Border thickness in pixels.
+border_width = 2
+
+# Window border colors. Colors may be #RGB, #RRGGBB, or #RRGGBBAA.
+border_active = { outer = "#FFD000", mid = "#000000", inner = "#FFD000" }
+border_inactive = { outer = "#404040", mid = "#404040", inner = "#404040" }
+
+# Titlebar colors.
+titlebar_text_active = "#000000"
+titlebar_text_inactive = "#808080"
+titlebar_bg_active = "#FFD000"
+titlebar_bg_inactive = "#202020"
+
+# Right-click desktop menu colors.
+menu_bg = "#000000"
+menu_text = "#FFFFFF"
+menu_highlight_bg = "#FFD000"
+menu_highlight_text = "#000000"
+
+# Window button colors.
+button_bg = "#202020"
+button_highlight = "#FFD000"
+button_shadow = "#000000"
+
+# Soft drop shadows.
+shadows_enabled = true
+shadows_active_size = 20
+shadows_inactive_size = 10
+shadows_color = "#00000033"
+
+# Font used for titlebars, menus, and desktop icons.
+font_name = "Sans"
+font_size = 12.0
+
+# Desktop background color.
+desktop_background = "#101010"
+
+# Minimized-window icons on the desktop.
+icons_enabled = true
+# icons_font_name = "Sans"
+# icons_font_size = 10.0
+# icons_text = "#FFFFFF"
+# icons_highlight_bg = "#FFD000"
+# icons_highlight_text = "#000000"
+
+# Per-window rules.
+# match_app_id: exact match, OR across values.
+# match_app_id_prefix: prefix match.
+# match_props: AND across values. Supported: toplevel, csd_only.
+# force_ssd: force server-side decorations.
+# swallow_top: pixels of client-side decoration to hide.
+# [[rules]]
+# match_app_id = "firefox-esr"
+# match_props = "toplevel"
+# force_ssd = true
+# swallow_top = 48

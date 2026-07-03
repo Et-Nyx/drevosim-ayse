@@ -51,7 +51,10 @@ The flake is organized in a dendritic (tree-like) structure inspired by [Drevosi
 │       │   └── river/
 │       │       ├── river.nix
 │       │       ├── canoe.nix
-│       │       └── rill.nix
+│       │       ├── rill.nix
+│       │       └── faylu/ # raw config files (filtered from import-tree)
+│       │           ├── canoe.toml
+│       │           └── rill.zon
 │       ├── produti/       # productivity tools
 │       │   └── tul.nix
 │       ├── programa/      # general programs
@@ -78,6 +81,8 @@ The flake is organized in a dendritic (tree-like) structure inspired by [Drevosi
 │       │       └── foot.ini
 │       └── yuxi/          # gaming
 │           └── tul.nix
+├── offolo/                # offline / external build dependencies
+│   └── rill.nix           # vendored Zig dependencies for rill
 └── yongu/                 # helper functions
     ├── monlari.nix        # recursive NixOS-module collector
     └── parseIni.nix       # pure-Nix INI parser for faylu/ files
