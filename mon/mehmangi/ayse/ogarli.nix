@@ -1,11 +1,11 @@
 { ... }:
 {
   flake.nixosModules.ayse.ogarli =
-  { ... }:
+  { config, ... }:
   {
     users.users.eter = {
       isNormalUser = true;
-      initialPassword = "1234";
+      hashedPasswordFile = config.age.secrets.ayse-eter-pasalexi.path;
       useDefaultShell = true;
       extraGroups = [
         "wheel"
