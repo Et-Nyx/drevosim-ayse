@@ -14,34 +14,65 @@ The flake is organized in a dendritic (tree-like) structure inspired by [Drevosi
 
 ## File Layout
 
-| File / Directory | Purpose |
-|------------------|---------|
-| `flake.nix` | Flake inputs and flake-parts + import-tree entry point. |
-| `flake.lock` | Locked flake input revisions. |
-| `mon/` | Module tree (imported recursively by import-tree). |
-| `mon/parts.nix` | flake-parts `systems` configuration. |
-| `mon/basi.nix` | Shared base options (`drevosim.userName`, nix settings, GC, unfree). |
-| `yongu/monlari.nix` | Recursive NixOS-module collector used by the host assembler. |
-| `mon/sifa/` | Feature modules. |
-| `mon/sifa/kolor/` | Theming & customization. |
-| `mon/sifa/kuflu/` | Security & login (ly, swaylock, waylock). |
-| `mon/sifa/medya/` | Audio / video (pipewire, media utilities). |
-| `mon/sifa/mesa/` | Window managers, compositors & desktops (Plasma, river, canoe, rill). |
-| `mon/sifa/produti/` | Productivity tools. |
-| `mon/sifa/programa/` | General programs (fuzzel, simple utilities, browsers). |
-| `mon/sifa/servi/` | System services (networkmanager, openssh, mako, polkit). |
-| `mon/sifa/terminal/` | Terminal emulators, shells & generic CLI tools. |
-| `mon/sifa/yuxi/` | Gaming. |
-| `mon/mehmangi/ayse/` | Host configuration for machine `ayse`. |
-| `mon/mehmangi/ayse/estandar.nix` | Host assembler (defines `.#ayse`). |
-| `mon/mehmangi/ayse/ogarli.nix` | User configuration. |
-| `mon/mehmangi/ayse/loka.nix` | Locale, timezone, and keymaps. |
-| `mon/mehmangi/ayse/nukleus/` | Core host configuration. |
-| `mon/mehmangi/ayse/nukleus/estrutur.nix` | Hostname and host-specific structure. |
-| `mon/mehmangi/ayse/nukleus/hardwer.nix` | Hardware/kernel configuration. |
-| `mon/mehmangi/ayse/nukleus/xoru.nix` | Bootloader configuration. |
-| `mon/mehmangi/ayse/nukleus/disko.nix` | Disk partitioning and filesystem layout. |
-| `mon/mehmangi/ayse/nukleus/preservation.nix` | Preservation rules for the ephemeral root. |
+```text
+.
+├── flake.nix              # flake-parts + import-tree entry point
+├── flake.lock             # locked input revisions
+├── README.md              # this file
+├── mon/                   # module tree (imported recursively by import-tree)
+│   ├── parts.nix          # flake-parts systems configuration
+│   ├── basi.nix           # shared base options (userName, nix settings, GC, unfree)
+│   ├── mehmangi/          # machines / hosts
+│   │   └── ayse/          # host configuration for machine `ayse`
+│   │       ├── estandar.nix    # host assembler (defines `.#ayse`)
+│   │       ├── ogarli.nix      # user configuration
+│   │       ├── loka.nix        # locale, timezone, keymaps
+│   │       └── nukleus/        # core host configuration
+│   │           ├── estrutur.nix   # hostname & host-specific structure
+│   │           ├── hardwer.nix    # hardware/kernel configuration
+│   │           ├── xoru.nix       # bootloader configuration
+│   │           ├── disko.nix      # disk partitioning & filesystem layout
+│   │           └── preservation.nix # preservation rules for the ephemeral root
+│   └── sifa/              # feature modules
+│       ├── kolor/         # theming & customization
+│       │   └── tul.nix
+│       ├── kuflu/         # security & login (ly)
+│       │   ├── ly.nix
+│       │   └── tul.nix
+│       ├── medya/         # audio / video
+│       │   ├── pipewire.nix
+│       │   └── tul.nix
+│       ├── mesa/          # window managers, compositors & desktops
+│       │   ├── plasma.nix
+│       │   ├── tul.nix
+│       │   └── river/
+│       │       ├── river.nix
+│       │       ├── canoe.nix
+│       │       └── rill.nix
+│       ├── produti/       # productivity tools
+│       │   └── tul.nix
+│       ├── programa/      # general programs
+│       │   ├── fuzzel.nix
+│       │   └── tul.nix
+│       ├── servi/         # system services
+│       │   ├── networkmanager.nix
+│       │   ├── openssh.nix
+│       │   ├── mako.nix
+│       │   ├── polkit.nix
+│       │   └── tul.nix
+│       ├── terminal/      # terminal emulators, shells & CLI tools
+│       │   ├── foot.nix
+│       │   ├── fish.nix
+│       │   ├── nushell.nix
+│       │   ├── tul.nix
+│       │   └── faylu/     # raw config files (filtered from import-tree)
+│       │       └── foot.ini
+│       └── yuxi/          # gaming
+│           └── tul.nix
+└── yongu/                 # helper functions
+    ├── monlari.nix        # recursive NixOS-module collector
+    └── parseIni.nix       # pure-Nix INI parser for faylu/ files
+```
 
 ## Disks
 
