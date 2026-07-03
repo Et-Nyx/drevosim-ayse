@@ -36,9 +36,12 @@ The flake is organized in a dendritic (tree-like) structure inspired by [Drevosi
 │   └── sifa/              # feature modules
 │       ├── kolor/         # theming & customization
 │       │   └── tul.nix
-│       ├── kuflu/         # security & login (ly)
+│       ├── kuflu/         # security & login (ly, sddm)
 │       │   ├── ly.nix
-│       │   └── tul.nix
+│       │   ├── sddm.nix
+│       │   ├── tul.nix
+│       │   └── faylu/     # raw config files (filtered from import-tree)
+│       │       └── ly.ini
 │       ├── medya/         # audio / video
 │       │   ├── pipewire.nix
 │       │   └── tul.nix
@@ -53,13 +56,17 @@ The flake is organized in a dendritic (tree-like) structure inspired by [Drevosi
 │       │   └── tul.nix
 │       ├── programa/      # general programs
 │       │   ├── fuzzel.nix
-│       │   └── tul.nix
+│       │   ├── tul.nix
+│       │   └── faylu/     # raw config files (filtered from import-tree)
+│       │       └── fuzzel.ini
 │       ├── servi/         # system services
 │       │   ├── networkmanager.nix
 │       │   ├── openssh.nix
 │       │   ├── mako.nix
 │       │   ├── polkit.nix
-│       │   └── tul.nix
+│       │   ├── tul.nix
+│       │   └── faylu/     # raw config files (filtered from import-tree)
+│       │       └── mako.ini
 │       ├── terminal/      # terminal emulators, shells & CLI tools
 │       │   ├── foot.nix
 │       │   ├── fish.nix
