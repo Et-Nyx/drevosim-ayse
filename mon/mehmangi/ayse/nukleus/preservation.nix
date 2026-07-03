@@ -3,6 +3,8 @@
   flake.nixosModules.ayse.nukleus.preservation =
   { ... }:
   {
+    systemd.services.systemd-machine-id-commit.enable = false;
+
     preservation = {
       enable = true;
 
