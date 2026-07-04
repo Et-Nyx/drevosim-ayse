@@ -59,11 +59,6 @@
           extraArgs = [ "-f" ];
 
           subvolumes = {
-            "/persistent" = {
-              mountOptions = [ "subvol=persistent" "noatime" ];
-              mountpoint = "/persistent";
-            };
-
             "/nix" = {
               mountOptions = [ "subvol=nix" "noatime" ];
               mountpoint = "/nix";
@@ -86,7 +81,7 @@
         content = {
           type = "filesystem";
           format = "btrfs";
-          mountpoint = "/mnt/data";
+          mountpoint = "/persistent";
           mountOptions = [ "compress=zstd" "noatime" ];
         };
       };

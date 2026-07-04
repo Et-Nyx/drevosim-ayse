@@ -7,10 +7,9 @@ The flake is organized in a dendritic (tree-like) structure inspired by [Drevosi
 ## Overview
 
 - **Root filesystem (`/`)**: `tmpfs` created fresh on every boot.
-- **`/nix`**: Dedicated Btrfs subvolume on the SSD, persisted across reboots.
-- **`/persistent`**: Btrfs subvolume on the SSD for system state preserved by `preservation`.
 - **`/home`**: `tmpfs`, recreated fresh on every boot.
-- **`/mnt/data`**: Separate spinning disk (HDD) formatted with Btrfs + zstd compression, available for manual storage.
+- **`/nix`**: Dedicated Btrfs subvolume on the SSD, persisted across reboots.
+- **`/persistent`**: Btrfs partition on the HDD for all system and user state preserved by `preservation`.
 - **Desktop**: KDE Plasma 6 with SDDM.
 
 ## File Layout
@@ -98,14 +97,14 @@ The flake is organized in a dendritic (tree-like) structure inspired by [Drevosi
 
 Configured in `mon/mehmangi/ayse/nukleus/disko.nix`:
 
-- `/dev/nvme0n1` — SSD (boot, swap, `/nix`, `/persistent`)
+- `/dev/nvme0n1` — SSD (boot, swap, `/nix`)
   - `ESP` (1 GiB, vfat, `/boot`)
   - `swap` (16 GiB)
   - `root` (remainder, Btrfs)
     - subvolume `nix` → `/nix`
-    - subvolume `persistent` → `/persistent`
-- `/dev/sda` — HDD (`/mnt/data`)
+- `/dev/sda` — HDD (`/persistent`)
   - single Btrfs partition with zstd compression
+  - holds all preserved state: SSH keys, NetworkManager data, browser profiles, KDE config, and the flake checkout
 
 > **Warning:** The Disko configuration references specific device names. Always double-check these paths on the target hardware before running any destructive Disko command.
 
