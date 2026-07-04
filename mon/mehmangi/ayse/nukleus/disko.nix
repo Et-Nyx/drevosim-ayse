@@ -14,6 +14,13 @@
           "mode=755"
         ];
       };
+      "/home" = {
+        fsType = "tmpfs";
+        mountOptions = [
+          "size=25%"
+          "mode=755"
+        ];
+      };
     };
 
     disko.devices.disk.main = {
@@ -79,7 +86,7 @@
         content = {
           type = "filesystem";
           format = "btrfs";
-          mountpoint = "/home";
+          mountpoint = "/mnt/data";
           mountOptions = [ "compress=zstd" "noatime" ];
         };
       };

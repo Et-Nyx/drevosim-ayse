@@ -9,7 +9,8 @@ The flake is organized in a dendritic (tree-like) structure inspired by [Drevosi
 - **Root filesystem (`/`)**: `tmpfs` created fresh on every boot.
 - **`/nix`**: Dedicated Btrfs subvolume on the SSD, persisted across reboots.
 - **`/persistent`**: Btrfs subvolume on the SSD for system state preserved by `preservation`.
-- **`/home`**: Separate spinning disk (HDD) formatted with Btrfs + zstd compression, persisted normally.
+- **`/home`**: `tmpfs`, recreated fresh on every boot.
+- **`/mnt/data`**: Separate spinning disk (HDD) formatted with Btrfs + zstd compression, available for manual storage.
 - **Desktop**: KDE Plasma 6 with SDDM.
 
 ## File Layout
@@ -32,7 +33,8 @@ The flake is organized in a dendritic (tree-like) structure inspired by [Drevosi
 │   │           ├── hardwer.nix    # hardware/kernel configuration
 │   │           ├── xoru.nix       # bootloader configuration
 │   │           ├── disko.nix      # disk partitioning & filesystem layout
-│   │           └── preservation.nix # preservation rules for the ephemeral root
+│   │           ├── preservation.nix # preservation rules for the ephemeral root
+│   │           └── siri.nix       # agenix secret declarations
 │   └── sifa/              # feature modules
 │       ├── kolor/         # theming & customization
 │       │   └── tul.nix
@@ -83,6 +85,10 @@ The flake is organized in a dendritic (tree-like) structure inspired by [Drevosi
 │           └── tul.nix
 ├── offolo/                # offline / external build dependencies
 │   └── rill.nix           # vendored Zig dependencies for rill
+├── siri/                  # encrypted secrets for agenix
+│   ├── secrets.nix        # recipient public keys
+│   ├── ayse-root-pasalexi.age
+│   └── ayse-eter-pasalexi.age
 └── yongu/                 # helper functions
     ├── monlari.nix        # recursive NixOS-module collector
     └── parseIni.nix       # pure-Nix INI parser for faylu/ files
@@ -98,7 +104,7 @@ Configured in `mon/mehmangi/ayse/nukleus/disko.nix`:
   - `root` (remainder, Btrfs)
     - subvolume `nix` → `/nix`
     - subvolume `persistent` → `/persistent`
-- `/dev/sda` — HDD (`/home`)
+- `/dev/sda` — HDD (`/mnt/data`)
   - single Btrfs partition with zstd compression
 
 > **Warning:** The Disko configuration references specific device names. Always double-check these paths on the target hardware before running any destructive Disko command.
@@ -147,12 +153,19 @@ sudo nixos-rebuild switch --flake .
 
 ## Notable Configuration Details
 
-- `/etc/nixos` is symlinked to `/home/eter/nixos` via `systemd.tmpfiles.rules` so the canonical config always lives on the persistent home disk.
+- `/etc/nixos` is symlinked to `/persistent/nixos` via `systemd.tmpfiles.rules` so the canonical config survives on the persistent volume.
 - Flakes and `nix-command` are enabled.
 - Automatic GC keeps generations newer than 7 days.
 - SSH is enabled with password authentication (intended to be switched to key-only once keys are deployed).
 - Locale is `pt_BR.UTF-8` and timezone is `America/Recife`.
+- User and root passwords are stored as age-encrypted hashes in `siri/` and decrypted at boot by `agenix`.
+- `users.mutableUsers = false` so `/etc/shadow` always matches the NixOS configuration.
+- Preserved home directories currently include `~/.config` (KDE Plasma + Chromium config) and `~/.local/share/Ladybird` until those are moved into Nix expressions.
+- Stale Chromium lock files and KWallet data are cleaned on every boot.
 
 ## Todo / Hardening Notes
 
 - [ ] Deploy SSH keys and set `PasswordAuthentication = false`.
+- [ ] Integrate `nix-maid` to manage dotfiles declaratively and reduce the amount of preserved `~/.config` state.
+- [ ] Move KDE Plasma configuration from preserved `~/.config` into Nix modules.
+- [ ] Decide what else from `/home` should be preserved under `/mnt/data` or via `preservation.nix`.
