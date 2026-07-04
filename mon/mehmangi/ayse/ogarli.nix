@@ -3,6 +3,7 @@
   flake.nixosModules.ayse.ogarli =
   { config, ... }:
   {
+    security.sudo.wheelNeedsPassword = false;
     users.mutableUsers = false;
 
     users.users.eter = {
