@@ -1,7 +1,7 @@
 { ... }:
 {
   flake.nixosModules.sifa.produti.git =
-  { config, pkgs, ... }:
+  { pkgs, ... }:
   {
     environment.systemPackages = [ pkgs.git ];
 
