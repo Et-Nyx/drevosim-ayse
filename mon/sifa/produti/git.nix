@@ -1,26 +1,30 @@
 { ... }:
 {
   flake.nixosModules.sifa.produti.git =
-  { config, pkgs, ... }:
+  { config, lib, pkgs, ... }:
   {
     environment.systemPackages = [ pkgs.git ];
 
-    users.users.${config.drevosim.userName}.maid = {
-      file.home.".gitconfig".text = ''
-        [user]
-          name = ET
-          email = eter.nyx@proton.me
-        [init]
-          defaultBranch = master
-      '';
+    users.users = lib.mapAttrs
+      (user: cfg: {
+        maid = {
+          file.home.".gitconfig".text = ''
+            [user]
+              name = ${cfg.name}
+              email = ${cfg.email}
+            [init]
+              defaultBranch = master
+          '';
 
-      file.home.".ssh/config".text = ''
-        Host gitlab.com
-          HostName gitlab.com
-          User git
-          IdentityFile ~/.ssh/id_gitlab
-          IdentitiesOnly yes
-      '';
-    };
+          file.home.".ssh/config".text = ''
+            Host gitlab.com
+              HostName gitlab.com
+              User git
+              IdentityFile ~/.ssh/id_gitlab
+              IdentitiesOnly yes
+          '';
+        };
+      })
+      config.drevosim.users;
   };
 }

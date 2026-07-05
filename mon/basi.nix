@@ -3,10 +3,22 @@
   flake.nixosModules.basi =
   { lib, ... }:
   {
-    options.drevosim.userName = lib.mkOption {
-      type = lib.types.str;
-      default = "eter";
-      description = "The username to use for the Drevosim nix-maid";
+    options.drevosim.users = lib.mkOption {
+      type = lib.types.attrsOf (lib.types.submodule ({ name, ... }: {
+        options = {
+          name = lib.mkOption {
+            type = lib.types.str;
+            default = name;
+            description = "Git user name for this account. Defaults to the username.";
+          };
+          email = lib.mkOption {
+            type = lib.types.str;
+            default = "${name}@email.com";
+            description = "Git email for this account. Defaults to <username>@email.com.";
+          };
+        };
+      }));
+      description = "Users managed by Drevosim nix-maid, mapped to their metadata.";
     };
 
     options.drevosim.session.autostart = lib.mkOption {
