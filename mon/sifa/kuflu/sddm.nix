@@ -1,4 +1,8 @@
-{ ... }:
+{ inputs, ... }:
+let
+  parseIni = import ./../../../yongu/parseIni.nix { lib = inputs.nixpkgs.lib; };
+  defaultSettings = parseIni.parseIni { file = ./faylu/sddm.conf; };
+in
 {
   flake.nixosModules.sifa.kuflu.sddm =
   { config, lib, ... }:
@@ -10,15 +14,10 @@
       enable = lib.mkEnableOption "SDDM display manager" // {
         default = true;
       };
-      theme = lib.mkOption {
-        type = lib.types.str;
-        default = "breeze";
-        description = "SDDM theme to use.";
-      };
       settings = lib.mkOption {
-        type = lib.types.attrsOf (lib.types.attrsOf lib.types.str);
-        default = { };
-        description = "Extra settings for /etc/sddm.conf.";
+        type = lib.types.attrsOf lib.types.anything;
+        default = defaultSettings;
+        description = "SDDM settings for /etc/sddm.conf.";
       };
     };
 
@@ -26,7 +25,6 @@
       services.displayManager.sddm = {
         enable = true;
         wayland.enable = true;
-        inherit (cfg) theme;
         settings = cfg.settings;
       };
     };
