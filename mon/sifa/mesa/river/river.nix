@@ -60,7 +60,7 @@ in
   { config, pkgs, lib, ... }:
   let
     opsyon = config.drevosim.mesa.river;
-    awto = config.drevosim.session.autostart ++ opsyon.awto;
+    awto = config.drevosim.xorawto ++ opsyon.awto;
     misuRiver = mkMisuRiver pkgs self.packages.${pkgs.stdenv.hostPlatform.system}.${harita.${opsyon.janela}} awto;
   in
   {

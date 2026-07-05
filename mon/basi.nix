@@ -3,7 +3,7 @@
   flake.nixosModules.basi =
   { lib, ... }:
   {
-    options.drevosim.autostart = lib.mkOption {
+    options.drevosim.xorawto = lib.mkOption {
       type = lib.types.listOf lib.types.str;
       default = [ ];
       description = "Shell commands to run in graphical sessions before the window manager/compositor starts";
