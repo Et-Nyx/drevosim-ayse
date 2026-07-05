@@ -1,49 +1,41 @@
-{ self, inputs, ... }:
+{ ... }:
 {
-  flake.nixosModules.basa =
-  { pkgs, lib, config, ... }:
-  let
-    cfg = config.taluji.sifa.produti.basa;
-  in
+  flake.nixosModules.sifa.basa =
+  { pkgs, ... }:
   {
-    options.taluji.sifa.produti.basa = {
-      enable = lib.mkEnableOption "Programming Language configurations";
-    };
-    config = lib.mkIf cfg.enable {
-      environment.systemPackages = with pkgs; [
-        # Nix
-        nil
-        nixd
-        nixpkgs-fmt
+    environment.systemPackages = with pkgs; [
+    # Nix
+    nil
+    nixd
+    nixpkgs-fmt
 
-        # Zig
-        zig
-        zls
+    # Zig
+    zig
+    zls
 
-        # Lua
-        lua
-        lua-language-server
+    # Lua
+    lua
+    lua-language-server
 
-        # C/Base
-        gcc
-        gnumake
-        pkg-config
+    # C/Base
+    gcc
+    gnumake
+    pkg-config
 
-        # Rust
-        rustc
-        cargo
-        rust-analyzer
+    # Rust
+    rustc
+    cargo
+    rust-analyzer
 
-        # Python
-        python3
+    # Python
+    python3
 
-        # Java
-        jdk
-        jdt-language-server
+    # Java
+    jdk
+    jdt-language-server
 
-        # JSON
-        package-version-server
-      ];
-    };
+    # JSON
+    package-version-server
+    ];
   };
 }

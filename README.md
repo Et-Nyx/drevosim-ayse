@@ -159,7 +159,7 @@ sudo nixos-rebuild switch --flake .
 - Locale is `pt_BR.UTF-8` and timezone is `America/Recife`.
 - User and root passwords are stored as age-encrypted hashes in `siri/` and decrypted at boot by `agenix`.
 - `users.mutableUsers = false` so `/etc/shadow` always matches the NixOS configuration.
-- Preserved home directories currently include `~/.config` (KDE Plasma + Chromium config) and `~/.local/share/Ladybird` until those are moved into Nix expressions.
+- Preserved home directories currently include `~/.config` (KDE Plasma + Chromium config) and `~/.local/share` (application data such as Ladybird and Dolphin bookmarks) until those are moved into Nix expressions.
 - Stale Chromium lock files and KWallet data are cleaned on every boot.
 
 ## Todo / Hardening Notes
