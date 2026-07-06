@@ -1,5 +1,4 @@
 { ... }:
-
 {
   flake.nixosModules.ayse.nukleus.nvidia =
   { config, pkgs, lib, ... }:
