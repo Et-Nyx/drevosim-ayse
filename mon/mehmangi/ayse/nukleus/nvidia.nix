@@ -129,9 +129,20 @@
     # The system comes up clean on the Intel iGPU.
     specialisation.igpu.configuration = {
       system.nixos.tags = [ "igpu" ];
-      boot.kernelParams = lib.mkForce [ "nvidia-drm.modeset=0" ];
+      boot.kernelParams = lib.mkAfter [ "nvidia-drm.modeset=0" ];
       services.xserver.videoDrivers = lib.mkForce [ "modesetting" ];
       hardware.nvidia.modesetting.enable = lib.mkForce false;
+      # Blacklist the nvidia kernel modules so they don't load in initrd or
+      # runtime and try to probe the dGPU (which may be in D3cold). Without
+      # this, the initrd boot fails because the nvidia module hangs/errors
+      # when it can't access the device.
+      boot.blacklistedKernelModules = [
+        "nvidia"
+        "nvidia_drm"
+        "nvidia_modeset"
+        "nvidia_uvm"
+        "nvidia_peermem"
+      ];
       # Unset the PRIME offload vars; preserve everything else.
       environment.sessionVariables = {
         __NV_PRIME_RENDER_OFFLOAD = lib.mkForce null;
