@@ -132,7 +132,6 @@
       boot.kernelParams = lib.mkForce [ "nvidia-drm.modeset=0" ];
       services.xserver.videoDrivers = lib.mkForce [ "modesetting" ];
       hardware.nvidia.modesetting.enable = lib.mkForce false;
-      services.udev.extraRules = lib.mkForce "";
       # Unset the PRIME offload vars; preserve everything else.
       environment.sessionVariables = {
         __NV_PRIME_RENDER_OFFLOAD = lib.mkForce null;
