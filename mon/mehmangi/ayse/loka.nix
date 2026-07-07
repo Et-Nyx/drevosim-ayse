@@ -19,10 +19,17 @@
     };
 
     environment.sessionVariables = {
-      XKB_DEFAULT_LAYOUT = "us";
-      XKB_DEFAULT_VARIANT = "";
+      XKB_DEFAULT_LAYOUT = "us,br";
+      XKB_DEFAULT_VARIANT = "altgr-intl,abnt2";
+      XKB_DEFAULT_OPTIONS = "lv3:rctrl_switch,grp:win_space_toggle";
     };
 
-    console.keyMap = "br-abnt2";
+    services.xserver.xkb = {
+      layout = "us,br";
+      variant = "altgr-intl,abnt2";
+      options = "lv3:switch,grp:win_space_toggle";
+    };
+
+    console.useXkbConfig = true;
   };
 }
