@@ -7,7 +7,7 @@ in
   flake.nixosModules.sifa.kuflu.sddm =
   { config, lib, ... }:
   let
-    cfg = config.drevosim.kuflu.sddm;
+    opsyon = config.drevosim.kuflu.sddm;
   in
   {
     options.drevosim.kuflu.sddm = {
@@ -21,11 +21,11 @@ in
       };
     };
 
-    config = lib.mkIf cfg.enable {
+    config = lib.mkIf opsyon.enable {
       services.displayManager.sddm = {
         enable = true;
         wayland.enable = true;
-        settings = cfg.settings;
+        settings = opsyon.settings;
       };
     };
   };

@@ -11,7 +11,7 @@ in
   flake.nixosModules.sifa.programa.fuzzel =
   { config, lib, pkgs, ... }:
   let
-    cfg = config.drevosim.programa.fuzzel;
+    opsyon = config.drevosim.programa.fuzzel;
   in
   {
     options.drevosim.programa.fuzzel = {
@@ -25,8 +25,8 @@ in
       };
     };
 
-    config = lib.mkIf cfg.enable {
-      environment.systemPackages = [ (mkMisuFuzzel pkgs cfg.settings) ];
+    config = lib.mkIf opsyon.enable {
+      environment.systemPackages = [ (mkMisuFuzzel pkgs opsyon.settings) ];
     };
   };
 

@@ -11,7 +11,7 @@ in
   flake.nixosModules.sifa.terminal.foot =
   { config, lib, pkgs, ... }:
   let
-    cfg = config.drevosim.terminal.foot;
+    opsyon = config.drevosim.terminal.foot;
   in
   {
     options.drevosim.terminal.foot = {
@@ -25,8 +25,8 @@ in
       };
     };
 
-    config = lib.mkIf cfg.enable {
-      environment.systemPackages = [ (mkMisuFoot pkgs cfg.settings) ];
+    config = lib.mkIf opsyon.enable {
+      environment.systemPackages = [ (mkMisuFoot pkgs opsyon.settings) ];
     };
   };
 

@@ -11,7 +11,7 @@ in
   flake.nixosModules.sifa.servi.mako =
   { config, lib, pkgs, ... }:
   let
-    cfg = config.drevosim.servi.mako;
+    opsyon = config.drevosim.servi.mako;
   in
   {
     options.drevosim.servi.mako = {
@@ -25,8 +25,8 @@ in
       };
     };
 
-    config = lib.mkIf cfg.enable {
-      environment.systemPackages = [ (mkMisuMako pkgs cfg.settings) ];
+    config = lib.mkIf opsyon.enable {
+      environment.systemPackages = [ (mkMisuMako pkgs opsyon.settings) ];
       drevosim.xorawto = [ "mako" ];
     };
   };
