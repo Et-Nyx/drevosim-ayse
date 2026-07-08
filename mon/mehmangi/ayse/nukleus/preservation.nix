@@ -52,6 +52,7 @@
             # Transitional: broad application data.
             # Includes KWallet data and Plasma state. Will be narrowed later.
             ".local/share"
+            ".local/state"
 
             # SSH user keys and known_hosts.
             ".ssh"
@@ -60,6 +61,7 @@
             "Desktop"
             "Documents"
             "Downloads"
+            "Games"
             "Music"
             "Pictures"
             "Public"
