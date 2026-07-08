@@ -32,6 +32,7 @@ The flake is organized in a dendritic (tree-like) structure inspired by [Drevosi
 │   │           ├── hardwer.nix    # hardware/kernel configuration
 │   │           ├── xoru.nix       # bootloader configuration
 │   │           ├── disko.nix      # disk partitioning & filesystem layout
+│   │           ├── nvidia.nix     # NVIDIA PRIME offload & iGPU specialisation
 │   │           ├── preservation.nix # preservation rules for the ephemeral root
 │   │           └── siri.nix       # agenix secret declarations
 │   └── sifa/              # feature modules
@@ -42,8 +43,10 @@ The flake is organized in a dendritic (tree-like) structure inspired by [Drevosi
 │       │   ├── sddm.nix
 │       │   ├── tul.nix
 │       │   └── faylu/     # raw config files (filtered from import-tree)
-│       │       └── ly.ini
+│       │       ├── ly.ini
+│       │       └── sddm.conf
 │       ├── medya/         # audio / video
+│       │   ├── bluetooth.nix
 │       │   ├── pipewire.nix
 │       │   └── tul.nix
 │       ├── mesa/          # window managers, compositors & desktops
@@ -81,6 +84,8 @@ The flake is organized in a dendritic (tree-like) structure inspired by [Drevosi
 │       │       ├── config.nu
 │       │       └── foot.ini
 │       └── yuxi/          # gaming
+│           ├── steam.nix
+│           ├── heroic.nix
 │           └── tul.nix
 ├── offolo/                # offline / external build dependencies
 │   └── rill.nix           # vendored Zig dependencies for rill
@@ -159,8 +164,34 @@ sudo nixos-rebuild switch --flake .
 - Locale is `pt_BR.UTF-8` and timezone is `America/Recife`.
 - User and root passwords are stored as age-encrypted hashes in `siri/` and decrypted at boot by `agenix`.
 - `users.mutableUsers = false` so `/etc/shadow` always matches the NixOS configuration.
-- Preserved home directories currently include `~/.config` (KDE Plasma + Chromium config) and `~/.local/share` (application data such as Ladybird and Dolphin bookmarks) until those are moved into Nix expressions.
 - Stale Chromium lock files and KWallet data are cleaned on every boot.
+- Preserved home directories include `~/.config` (KDE Plasma + Chromium config), `~/.local/share` and `~/.local/state` (application data), `~/.ssh`, and the standard XDG user folders including `~/Games` (used by Heroic and Steam for large game installs that would otherwise fill the tmpfs root).
+- Preserved system state includes `/etc/ssh`, `/var/lib/bluetooth` (pairing keys), `/var/lib/NetworkManager/system-connections`, and `/var/lib/nixos` (user/group database).
+- Bluetooth is enabled (`hardware.bluetooth`) with `powerOnBoot = true` and `bluez` in `systemPackages`.
+
+### NVIDIA (Optimus / PRIME)
+
+Configured in `mon/mehmangi/ayse/nukleus/nvidia.nix`. The host (`ayse`) is a Dell Inspiron 7580 with Intel UHD 630 (iGPU) and NVIDIA GeForce MX150 (GP108M, Pascal). The dGPU is wired to a 3D controller class (no display), so PRIME render-offload is the only way to use it.
+
+- `hardware.nvidia.package` is pinned to `legacy_580` (Pascal support was dropped in the 595+ production branch).
+- `hardware.nvidia.open = false` (Pascal is not supported by the open kernel modules).
+- `prime.offload.enable = true` with `prime-run` exposed at `/run/current-system/sw/bin`.
+- `prime.reverseSync.enable = true` to render dGPU output on the iGPU's display.
+- Global `__NV_PRIME_RENDER_OFFLOAD` / `__GLX_VENDOR_LIBRARY_NAME` / `__VK_LAYER_NV_optimus` env vars are set in `environment.sessionVariables` so user-launched apps prefer the dGPU.
+- `cudaCapabilities = [ "6.1" ]` (Pascal compute capability).
+- `boot.kernelParams = [ "pcie_aspm=off" "nvidia-drm.modeset=1" ]` and a udev rule force the dGPU out of D3cold at boot. Without this, the firmware-parked dGPU is undetectable.
+
+An `igpu` specialisation is defined for fallback: it blacklists all nvidia kernel modules, forces `services.xserver.videoDrivers = [ "modesetting" ]`, and unsets the PRIME env vars. Boot it from the systemd-boot menu if the dGPU fails to wake.
+
+### Gaming
+
+Configured in `mon/sifa/yuxi/`:
+
+- `steam.nix` — `programs.steam` with `gamescopeSession.enable` and `remotePlay.openFirewall`.
+- `heroic.nix` — Heroic Games Launcher (Epic, GOG, Amazon Prime Gaming).
+- `tul.nix` — `gamescope`, `mangohud`, `protonup-qt`, `protontricks`, and `programs.gamemode`.
+
+Game data is installed under the preserved `~/Games` directory to avoid filling the 3.9 GB tmpfs root.
 
 ## Todo / Hardening Notes
 
@@ -168,3 +199,4 @@ sudo nixos-rebuild switch --flake .
 - [ ] Integrate `nix-maid` to manage dotfiles declaratively and reduce the amount of preserved `~/.config` state.
 - [ ] Move KDE Plasma configuration from preserved `~/.config` into Nix modules.
 - [ ] Decide what else from `/home` should be preserved under `/mnt/data` or via `preservation.nix`.
+- [ ] Consider switching from `legacy_580` to the open kernel modules once the hardware supports it (currently blocked by Pascal).
