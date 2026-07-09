@@ -7,6 +7,7 @@
         chromium
         opencode
         wget
+        browsh
       ];
     };
 }
