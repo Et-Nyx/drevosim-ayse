@@ -22,7 +22,7 @@
           DisableTelemetry = true;
           DisableFirefoxStudies = true;
           DisablePocket = true;
-          DisableFirefoxAccounts = true;
+          #DisableFirefoxAccounts = true;
           FirefoxHome = {
             Pocket = false;
             SponsoredPocket = false;
@@ -39,8 +39,7 @@
             Default = "DuckDuckGo";
             PreventInstalls = false;
           };
-          HttpsOnlyMode = "force_enabled";
-
+          #HttpsOnlyMode = "force_enabled";
           ExtensionSettings = {
             "uBlock0@raymondhill.net" = {
               installation_mode = "force_installed";
@@ -58,13 +57,10 @@
               default_area = "navbar";
             };
           };
+          Preferences = {
+            "sidebar.verticalTabs" = true;
+          };
         };
-      };
-
-      xdg.defaultApplications = {
-        "text/html" = "firefox.desktop";
-        "x-scheme-handler/http" = "firefox.desktop";
-        "x-scheme-handler/https" = "firefox.desktop";
       };
     };
   };
