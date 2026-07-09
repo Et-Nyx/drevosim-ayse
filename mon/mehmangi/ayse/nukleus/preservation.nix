@@ -64,6 +64,7 @@
             "Games"
             "Music"
             "Pictures"
+            "Projects"
             "Public"
             "Templates"
             "Videos"
