@@ -72,8 +72,7 @@ The flake is organized in a dendritic (tree-like) structure inspired by [Drevosi
 │       │   ├── mako.nix
 │       │   ├── polkit.nix
 │       │   ├── tul.nix
-│       │   ├── kokoro/    # Kokoro TTS API server
-│       │   │   └── module.nix
+│       │   ├── kokoro.nix # Kokoro TTS API server
 │       │   └── faylu/     # raw config files (filtered from import-tree)
 │       │       └── mako.ini
 │       ├── terminal/      # terminal emulators, shells & CLI tools
@@ -187,7 +186,7 @@ An `igpu` specialisation is defined for fallback: it blacklists all nvidia kerne
 
 ### Kokoro TTS
 
-Configured in `mon/sifa/servi/kokoro/module.nix` and enabled for `ayse` in `mon/mehmangi/ayse/kokoro.nix`:
+Configured in `mon/sifa/servi/kokoro.nix` and enabled for `ayse` in `mon/mehmangi/ayse/kokoro.nix`:
 
 - Self-contained [Kokoro-FastAPI](https://github.com/remsky/Kokoro-FastAPI) v0.5.0 package bundled with model weights (`hexgrad/Kokoro-82M`) and all voice packs.
 - OpenAI-compatible HTTP API at `http://0.0.0.0:8880` (bind address and port are configurable).
