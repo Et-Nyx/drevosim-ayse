@@ -1,0 +1,1605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kokoro TTS Dashboard</title>
+  <style>
+    :root {
+      --bg-color: #080c14;
+      --card-bg: rgba(17, 24, 43, 0.7);
+      --card-border: rgba(255, 255, 255, 0.05);
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      
+      --primary: #8b5cf6;
+      --primary-glow: rgba(139, 92, 246, 0.35);
+      --primary-hover: #a78bfa;
+      
+      --accent-cyan: #06b6d4;
+      --accent-cyan-glow: rgba(6, 182, 212, 0.35);
+      
+      --success: #10b981;
+      --success-glow: rgba(16, 185, 129, 0.2);
+      
+      --warning: #f59e0b;
+      --error: #ef4444;
+      --error-glow: rgba(239, 68, 68, 0.2);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.08) 0%, transparent 45%);
+      background-attachment: fixed;
+    }
+
+    header {
+      backdrop-filter: blur(12px);
+      background-color: rgba(8, 12, 20, 0.5);
+      border-bottom: 1px solid var(--card-border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .logo-wave {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      height: 24px;
+    }
+
+    .logo-bar {
+      width: 4px;
+      background: linear-gradient(180deg, var(--primary), var(--accent-cyan));
+      border-radius: 2px;
+      animation: soundwave 1.5s ease-in-out infinite alternate;
+    }
+    .logo-bar:nth-child(1) { height: 60%; animation-delay: 0.1s; }
+    .logo-bar:nth-child(2) { height: 100%; animation-delay: 0.3s; }
+    .logo-bar:nth-child(3) { height: 40%; animation-delay: 0.0s; }
+    .logo-bar:nth-child(4) { height: 80%; animation-delay: 0.5s; }
+    .logo-bar:nth-child(5) { height: 50%; animation-delay: 0.2s; }
+
+    @keyframes soundwave {
+      0% { transform: scaleY(0.4); }
+      100% { transform: scaleY(1); }
+    }
+
+    header h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      background: linear-gradient(135deg, #fff 30%, #a78bfa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .nav-tabs {
+      display: flex;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 0.25rem;
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 0.5rem 1.25rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .tab-btn.active {
+      color: #fff;
+      background: var(--primary);
+      box-shadow: 0 4px 12px var(--primary-glow);
+    }
+
+    main {
+      flex: 1;
+      padding: 2rem;
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* GRID LAYOUTS */
+    .metrics-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .metric-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(10px);
+      transition: transform 0.3s ease, border-color 0.3s ease;
+    }
+
+    .metric-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(139, 92, 246, 0.25);
+    }
+
+    .metric-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: var(--card-accent, var(--primary));
+    }
+
+    .metric-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .metric-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: baseline;
+      gap: 0.25rem;
+    }
+
+    .metric-unit {
+      font-size: 1rem;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .metric-footer {
+      margin-top: auto;
+      padding-top: 0.5rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    /* GLASS CARD COMMON */
+    .glass-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      backdrop-filter: blur(10px);
+      margin-bottom: 1.5rem;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* TTS PLAY AREA */
+    .tts-container {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 2rem;
+    }
+
+    @media (max-width: 900px) {
+      .tts-container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .text-input-wrapper {
+      position: relative;
+    }
+
+    .tts-textarea {
+      width: 100%;
+      height: 220px;
+      background: rgba(8, 12, 20, 0.4);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 1rem;
+      color: var(--text-main);
+      font-size: 1rem;
+      resize: none;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+
+    .tts-textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 15px var(--primary-glow);
+      background: rgba(8, 12, 20, 0.6);
+    }
+
+    .char-counter {
+      position: absolute;
+      bottom: 0.75rem;
+      right: 0.75rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .settings-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .form-group label {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .form-select, .form-input {
+      background: rgba(8, 12, 20, 0.6);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 0.65rem 0.75rem;
+      color: var(--text-main);
+      font-size: 0.95rem;
+      outline: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      width: 100%;
+    }
+
+    .form-select:focus, .form-input:focus {
+      border-color: var(--primary);
+    }
+
+    .slider-container {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .slider-container input[type="range"] {
+      flex: 1;
+      accent-color: var(--primary);
+      height: 6px;
+      border-radius: 3px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .slider-val {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--primary);
+      min-width: 32px;
+      text-align: right;
+    }
+
+    .btn {
+      background: linear-gradient(135deg, var(--primary), #7c3aed);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 15px var(--primary-glow);
+    }
+
+    .btn:hover {
+      filter: brightness(1.15);
+      transform: translateY(-1px);
+    }
+
+    .btn:active {
+      transform: translateY(1px);
+    }
+
+    .btn:disabled {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-muted);
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    /* PLAYER CONTAINER */
+    .player-card {
+      margin-top: 1.5rem;
+      padding: 1.25rem;
+      background: rgba(139, 92, 246, 0.05);
+      border: 1px solid rgba(139, 92, 246, 0.2);
+      border-radius: 12px;
+      display: none;
+      animation: fadeIn 0.4s ease;
+    }
+
+    .player-card.active {
+      display: block;
+    }
+
+    .player-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+
+    .player-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .audio-player-wrapper {
+      width: 100%;
+      margin-top: 0.5rem;
+    }
+
+    audio {
+      width: 100%;
+      height: 40px;
+      border-radius: 8px;
+      outline: none;
+    }
+
+    .audio-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+    }
+
+    .audio-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    /* VOICE MANAGER GRID */
+    .voice-manager-layout {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 2rem;
+    }
+
+    @media (max-width: 950px) {
+      .voice-manager-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .voices-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1rem;
+    }
+
+    .voice-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 140px;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .voice-card:hover {
+      border-color: rgba(139, 92, 246, 0.25);
+      background: rgba(255, 255, 255, 0.04);
+      transform: translateY(-2px);
+    }
+
+    .voice-name {
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: #fff;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .voice-badge {
+      display: inline-block;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-top: 0.25rem;
+      width: fit-content;
+    }
+
+    .badge-default {
+      background: rgba(6, 182, 212, 0.1);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(6, 182, 212, 0.2);
+    }
+
+    .badge-custom {
+      background: rgba(139, 92, 246, 0.1);
+      color: var(--primary);
+      border: 1px solid rgba(139, 92, 246, 0.2);
+    }
+
+    .voice-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    .action-btn {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      color: var(--text-main);
+      padding: 0.4rem 0.5rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.25rem;
+      transition: all 0.2s ease;
+    }
+
+    .action-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--text-muted);
+    }
+
+    .action-btn.delete-btn:hover {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: var(--error);
+      color: var(--error);
+    }
+
+    /* UPLOAD & COMBINE */
+    .voice-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .dropzone {
+      border: 2px dashed rgba(139, 92, 246, 0.25);
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background: rgba(8, 12, 20, 0.2);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .dropzone:hover, .dropzone.dragover {
+      border-color: var(--primary);
+      background: rgba(139, 92, 246, 0.04);
+    }
+
+    .dropzone-icon {
+      color: var(--primary);
+      width: 32px;
+      height: 32px;
+    }
+
+    .dropzone-text {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .dropzone-file {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--success);
+    }
+
+    .upload-progress {
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 0.5rem;
+      display: none;
+    }
+
+    .upload-progress-bar {
+      height: 100%;
+      background: var(--primary);
+      width: 0%;
+      transition: width 0.1s ease;
+    }
+
+    /* RECENT CALLS TABLE */
+    .calls-table-wrapper {
+      overflow-x: auto;
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+      background: rgba(8, 12, 20, 0.3);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.85rem;
+    }
+
+    th {
+      background: rgba(255, 255, 255, 0.02);
+      padding: 0.75rem 1rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    td {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+      color: var(--text-main);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.01);
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .status-processing {
+      background: rgba(6, 182, 212, 0.1);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(6, 182, 212, 0.2);
+      animation: pulse 1.5s infinite;
+    }
+
+    .status-completed {
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--success);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .status-failed {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--error);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    @keyframes pulse {
+      0% { opacity: 0.6; }
+      50% { opacity: 1; }
+      100% { opacity: 0.6; }
+    }
+
+    .row-expand-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 0.2rem;
+      border-radius: 4px;
+    }
+
+    .row-expand-btn:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .detail-row {
+      display: none;
+      background: rgba(0, 0, 0, 0.15);
+    }
+
+    .detail-row.expanded {
+      display: table-row;
+    }
+
+    .detail-container {
+      padding: 1rem;
+      font-family: 'Courier New', Courier, monospace;
+      color: #a78bfa;
+      white-space: pre-wrap;
+      font-size: 0.8rem;
+    }
+
+    /* UTILITIES */
+    .text-accent {
+      color: var(--primary);
+    }
+
+    .loader {
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-top: 2px solid #fff;
+      border-radius: 50%;
+      width: 16px;
+      height: 16px;
+      animation: spin 0.8s linear infinite;
+      display: inline-block;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .alert {
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      margin-top: 1rem;
+      display: none;
+    }
+    
+    .alert-success {
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--success);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .alert-danger {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--error);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo-container">
+      <div class="logo-wave">
+        <span class="logo-bar"></span>
+        <span class="logo-bar"></span>
+        <span class="logo-bar"></span>
+        <span class="logo-bar"></span>
+        <span class="logo-bar"></span>
+      </div>
+      <h1>Kokoro TTS</h1>
+    </div>
+    
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="switchTab('metrics')">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z"/></svg>
+        Status & Logs
+      </button>
+      <button class="tab-btn" onclick="switchTab('test')">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        Speech Test
+      </button>
+      <button class="tab-btn" onclick="switchTab('voices')">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+        Voice Manager
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <!-- STATUS & LOGS TAB -->
+    <div id="tab-metrics" class="tab-content active">
+      <div class="metrics-row">
+        <!-- CPU CARD -->
+        <div class="metric-card" style="--card-accent: var(--primary)">
+          <span class="metric-title">CPU Utilization</span>
+          <span class="metric-value" id="metric-cpu">--<span class="metric-unit">%</span></span>
+          <div class="metric-footer" id="cpu-footer">Processing tasks load</div>
+        </div>
+        <!-- MEMORY CARD -->
+        <div class="metric-card" style="--card-accent: var(--accent-cyan)">
+          <span class="metric-title">System Memory</span>
+          <span class="metric-value" id="metric-mem">--<span class="metric-unit">%</span></span>
+          <div class="metric-footer" id="mem-footer">-- GB / -- GB used</div>
+        </div>
+        <!-- ACTIVE REQUESTS CARD -->
+        <div class="metric-card" style="--card-accent: var(--success)">
+          <span class="metric-title">Active Processes</span>
+          <span class="metric-value" id="metric-active">0</span>
+          <div class="metric-footer">Running syntheses</div>
+        </div>
+        <!-- TOTAL REQS CARD -->
+        <div class="metric-card" style="--card-accent: var(--warning)">
+          <span class="metric-title">Total Logs</span>
+          <span class="metric-value" id="metric-total">0</span>
+          <div class="metric-footer">Calls logged in history</div>
+        </div>
+      </div>
+
+      <!-- GPU PANEL (IF PRESENT) -->
+      <div class="glass-card" id="gpu-panel" style="display: none;">
+        <div class="card-header">
+          <span class="card-title">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>
+            NVIDIA CUDA GPU Status
+          </span>
+        </div>
+        <div class="metrics-row" id="gpu-metrics-container" style="margin-bottom: 0;">
+          <!-- GPU metrics populated dynamically -->
+        </div>
+      </div>
+
+      <!-- API CALL MONITOR -->
+      <div class="glass-card">
+        <div class="card-header">
+          <span class="card-title">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            API Process Monitor & Logs
+          </span>
+        </div>
+        <div class="calls-table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th width="40"></th>
+                <th width="160">Timestamp</th>
+                <th width="80">Method</th>
+                <th>API Endpoint</th>
+                <th>Details</th>
+                <th width="120">Latency</th>
+                <th width="120">Status</th>
+              </tr>
+            </thead>
+            <tbody id="calls-log-body">
+              <tr>
+                <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                  No API calls logged yet. Synthesize text to populate logs.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- SPEECH TEST TAB -->
+    <div id="tab-test" class="tab-content">
+      <div class="glass-card">
+        <div class="card-header">
+          <span class="card-title">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+            Speech Synthesizer Playground
+          </span>
+        </div>
+
+        <div class="tts-container">
+          <!-- INPUT FIELD -->
+          <div class="form-group">
+            <label for="text-to-synthesize">Input text to convert to speech</label>
+            <div class="text-input-wrapper">
+              <textarea id="text-to-synthesize" class="tts-textarea" placeholder="Type or paste the text you want Kokoro to speak..." oninput="updateCharCount()"></textarea>
+              <span class="char-counter" id="char-count">0 characters</span>
+            </div>
+            
+            <!-- PLAY/PLAYER CONTAINER -->
+            <div class="player-card" id="tts-audio-card">
+              <div class="player-header">
+                <span class="player-title">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
+                  Generated Audio Playback
+                </span>
+                <span class="action-btn" style="width: auto; padding: 0.25rem 0.5rem;" onclick="downloadAudio()">
+                  <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                  Download
+                </span>
+              </div>
+              <div class="audio-player-wrapper">
+                <audio id="tts-audio-element" controls></audio>
+              </div>
+              <div class="audio-meta">
+                <span class="audio-meta-item" id="audio-meta-time">Latency: --s</span>
+                <span class="audio-meta-item" id="audio-meta-speed">Chars/Sec: --</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- CONTROLS -->
+          <div class="settings-panel">
+            <div class="form-group">
+              <label for="voice-select">Voice model profile</label>
+              <select id="voice-select" class="form-select">
+                <option value="" disabled selected>Select a voice...</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="speed-slider">Generation Speed multiplier</label>
+              <div class="slider-container">
+                <input type="range" id="speed-slider" min="0.5" max="2.0" step="0.1" value="1.0" oninput="updateSliderVal(this, 'speed-val')">
+                <span class="slider-val" id="speed-val">1.0x</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="format-select">Audio container format</label>
+              <select id="format-select" class="form-select">
+                <option value="mp3" selected>MP3 (Default)</option>
+                <option value="wav">WAV (Lossless)</option>
+                <option value="flac">FLAC (Lossless compressed)</option>
+                <option value="opus">Opus</option>
+              </select>
+            </div>
+
+            <button class="btn" id="generate-btn" onclick="generateSpeech()">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+              <span id="generate-btn-text">Generate Speech</span>
+            </button>
+            <div class="alert alert-danger" id="test-alert"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VOICE MANAGER TAB -->
+    <div id="tab-voices" class="tab-content">
+      <div class="voice-manager-layout">
+        <!-- VOICES LIST -->
+        <div class="glass-card" style="margin-bottom: 0;">
+          <div class="card-header">
+            <span class="card-title">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h7"/></svg>
+              Available Speech Profiles
+            </span>
+            <span style="font-size: 0.8rem; color: var(--text-muted);" id="voices-count">0 profiles loaded</span>
+          </div>
+          <div class="voices-grid" id="voices-grid-container">
+            <!-- Voice items populated dynamically -->
+          </div>
+        </div>
+
+        <!-- VOICE SIDEBAR: UPLOAD & BLEND -->
+        <div class="voice-sidebar">
+          <!-- UPLOAD -->
+          <div class="glass-card" style="margin-bottom: 0;">
+            <div class="card-header">
+              <span class="card-title">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                Upload Voice Pack
+              </span>
+            </div>
+            
+            <input type="file" id="voice-file-input" style="display: none;" accept=".pt" onchange="handleFileSelect(event)">
+            <div class="dropzone" id="drop-zone" onclick="document.getElementById('voice-file-input').click()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+              <svg class="dropzone-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+              <span class="dropzone-text" id="dropzone-label">Click or Drag & Drop voice file (.pt)</span>
+              <div class="upload-progress" id="upload-progress-container">
+                <div class="upload-progress-bar" id="upload-progress-bar"></div>
+              </div>
+            </div>
+            <div class="alert alert-success" id="upload-success-alert"></div>
+            <div class="alert alert-danger" id="upload-error-alert"></div>
+          </div>
+
+          <!-- COMBINE -->
+          <div class="glass-card" style="margin-bottom: 0;">
+            <div class="card-header">
+              <span class="card-title">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                Combine & Blend Voices
+              </span>
+            </div>
+            <div class="settings-panel">
+              <div class="form-group">
+                <label for="combine-voice-a">Voice A</label>
+                <select id="combine-voice-a" class="form-select">
+                  <option value="" disabled selected>Select Base Voice A...</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="combine-voice-b">Voice B</label>
+                <select id="combine-voice-b" class="form-select">
+                  <option value="" disabled selected>Select Blend Voice B...</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="blend-slider">Weight Ratio (Voice B weight)</label>
+                <div class="slider-container">
+                  <input type="range" id="blend-slider" min="0.0" max="1.0" step="0.1" value="0.5" oninput="updateSliderVal(this, 'blend-val')">
+                  <span class="slider-val" id="blend-val">0.5</span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="combine-name">Combined Voice Profile Name</label>
+                <input type="text" id="combine-name" class="form-input" placeholder="e.g. af_hybrid_sky">
+              </div>
+
+              <button class="btn" id="combine-btn" onclick="combineVoices()">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+                Blend Profile
+              </button>
+              <div class="alert alert-success" id="combine-success-alert"></div>
+              <div class="alert alert-danger" id="combine-error-alert"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // App State
+    let loadedVoices = [];
+    let pollingInterval = null;
+    let generatedAudioUrl = null;
+
+    // Default sample texts per voice type
+    const defaultText = "Kokoro is a high performance offline text to speech engine. This playground dashboard allows you to generate quality audio, manage voice packs, and view process statistics in real-time.";
+
+    window.onload = function() {
+      // Set default text
+      document.getElementById("text-to-synthesize").value = defaultText;
+      updateCharCount();
+
+      // Load initial data
+      fetchStatus();
+      fetchVoices();
+      fetchCalls();
+
+      // Setup Polling for status and logs
+      pollingInterval = setInterval(() => {
+        fetchStatus();
+        fetchCalls();
+      }, 1500);
+    };
+
+    // Navigation Tabs switcher
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      
+      const targetBtn = Array.from(document.querySelectorAll('.tab-btn')).find(btn => btn.textContent.toLowerCase().includes(tabId));
+      if (targetBtn) targetBtn.classList.add('active');
+      
+      const targetContent = document.getElementById(`tab-${tabId}`);
+      if (targetContent) targetContent.classList.add('active');
+    }
+
+    // Update Slider indicators
+    function updateSliderVal(slider, valId) {
+      document.getElementById(valId).textContent = slider.value + (valId === 'speed-val' ? 'x' : '');
+    }
+
+    // Update Character counter
+    function updateCharCount() {
+      const txt = document.getElementById("text-to-synthesize").value;
+      document.getElementById("char-count").textContent = `${txt.length} character${txt.length === 1 ? '' : 's'}`;
+    }
+
+    // Get Service Status & System Metrics
+    function fetchStatus() {
+      fetch('/dashboard/api/status')
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById('metric-cpu').innerHTML = `${Math.round(data.cpu_percent)}<span class="metric-unit">%</span>`;
+          document.getElementById('metric-mem').innerHTML = `${Math.round(data.memory_percent)}<span class="metric-unit">%</span>`;
+          document.getElementById('mem-footer').textContent = `${data.memory_used_gb} GB / ${data.memory_total_gb} GB used`;
+          document.getElementById('metric-active').textContent = data.active_processes_count;
+
+          // GPU rendering
+          const gpuPanel = document.getElementById('gpu-panel');
+          const gpuContainer = document.getElementById('gpu-metrics-container');
+          
+          if (data.gpu && data.gpu.length > 0) {
+            gpuPanel.style.display = 'block';
+            gpuContainer.innerHTML = data.gpu.map(g => `
+              <div class="metric-card" style="--card-accent: var(--accent-cyan)">
+                <span class="metric-title">${g.name} (Load)</span>
+                <span class="metric-value">${g.load}<span class="metric-unit">%</span></span>
+                <div class="metric-footer">Temp: ${g.temperature}°C | VRAM: ${g.memory_used}MB / ${g.memory_total}MB</div>
+              </div>
+            `).join('');
+          } else {
+            gpuPanel.style.display = 'none';
+          }
+        })
+        .catch(err => console.error('Error fetching status:', err));
+    }
+
+    // Retrieve Voice list
+    function fetchVoices() {
+      fetch('/v1/audio/voices')
+        .then(res => res.json())
+        .then(data => {
+          // Kokoro-FastAPI v0.5.0 structure usually returns { "voices": [...] }
+          loadedVoices = data.voices || [];
+          document.getElementById('voices-count').textContent = `${loadedVoices.length} profiles loaded`;
+          
+          populateVoiceDropdowns();
+          renderVoicesGrid();
+        })
+        .catch(err => console.error('Error fetching voices:', err));
+    }
+
+    // Populate Voice selection dropdowns
+    function populateVoiceDropdowns() {
+      const voiceSelect = document.getElementById('voice-select');
+      const voiceA = document.getElementById('combine-voice-a');
+      const voiceB = document.getElementById('combine-voice-b');
+      
+      const currentSelected = voiceSelect.value;
+      const currentSelectedA = voiceA.value;
+      const currentSelectedB = voiceB.value;
+      
+      // Clear options keeping placeholders
+      voiceSelect.innerHTML = '<option value="" disabled>Select a voice...</option>';
+      voiceA.innerHTML = '<option value="" disabled>Select Base Voice A...</option>';
+      voiceB.innerHTML = '<option value="" disabled>Select Blend Voice B...</option>';
+      
+      loadedVoices.forEach(voice => {
+        // Dropdown options
+        const opt = document.createElement('option');
+        opt.value = voice;
+        opt.textContent = voice;
+        voiceSelect.appendChild(opt.cloneNode(true));
+        voiceA.appendChild(opt.cloneNode(true));
+        voiceB.appendChild(opt.cloneNode(true));
+      });
+      
+      // Re-select if still valid
+      if (loadedVoices.includes(currentSelected)) voiceSelect.value = currentSelected;
+      else if (loadedVoices.length > 0) {
+        // default select af_heart or first voice
+        const defaultVoice = loadedVoices.find(v => v.includes('heart')) || loadedVoices[0];
+        voiceSelect.value = defaultVoice;
+      }
+      
+      if (loadedVoices.includes(currentSelectedA)) voiceA.value = currentSelectedA;
+      if (loadedVoices.includes(currentSelectedB)) voiceB.value = currentSelectedB;
+    }
+
+    // Render Voice List
+    function renderVoicesGrid() {
+      const container = document.getElementById('voices-grid-container');
+      container.innerHTML = '';
+      
+      if (loadedVoices.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-muted); text-align:center; grid-column: 1/-1;">No voices found.</p>';
+        return;
+      }
+      
+      // Standard Kokoro default voices
+      const defaults = [
+        "af_heart", "af_bella", "af_nicole", "af_sarah", "af_sky", 
+        "am_adam", "am_fenix", "am_michael", "am_puella",
+        "bf_emma", "bf_isabella", "bm_daniel", "bm_george"
+      ];
+      
+      loadedVoices.forEach(voice => {
+        const isDefault = defaults.includes(voice);
+        const card = document.createElement('div');
+        card.className = 'voice-card';
+        
+        card.innerHTML = `
+          <div>
+            <div class="voice-name" title="${voice}">${voice}</div>
+            <span class="voice-badge ${isDefault ? 'badge-default' : 'badge-custom'}">
+              ${isDefault ? 'default' : 'custom'}
+            </span>
+          </div>
+          <div class="voice-actions">
+            <button class="action-btn" onclick="previewVoice('${voice}', this)">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/></svg>
+              Say Preview
+            </button>
+            ${isDefault ? '' : `
+              <button class="action-btn delete-btn" onclick="deleteVoice('${voice}')" title="Delete custom voice">
+                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </button>
+            `}
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // Preview Speech for a voice
+    function previewVoice(voice, btn) {
+      const oldHtml = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="loader"></span>';
+      
+      const payload = {
+        model: "kokoro",
+        input: `Hello, this is a quick synthesis test of the voice ${voice}.`,
+        voice: voice,
+        response_format: "mp3"
+      };
+      
+      fetch('/v1/audio/speech', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+        .then(res => {
+          if (!res.ok) throw new Error("Synthesis failed");
+          return res.blob();
+        })
+        .then(blob => {
+          const url = URL.createObjectURL(blob);
+          const audio = new Audio(url);
+          audio.play();
+          
+          btn.disabled = false;
+          btn.innerHTML = oldHtml;
+        })
+        .catch(err => {
+          console.error(err);
+          btn.disabled = false;
+          btn.innerHTML = 'Error';
+          setTimeout(() => { btn.innerHTML = oldHtml; }, 2000);
+        });
+    }
+
+    // Delete custom voice file
+    function deleteVoice(voice) {
+      if (!confirm(`Are you sure you want to delete the custom voice profile "${voice}"?`)) return;
+      
+      // Make sure we append .pt if not already there
+      const filename = voice.endsWith('.pt') ? voice : `${voice}.pt`;
+      
+      fetch(`/dashboard/api/voices/${encodeURIComponent(filename)}`, {
+        method: 'DELETE'
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === 'success') {
+            fetchVoices();
+          } else {
+            alert('Failed to delete voice: ' + (data.detail || 'Unknown error'));
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          alert('Failed to delete voice');
+        });
+    }
+
+    // Blend/Combine Voices
+    function combineVoices() {
+      const voiceA = document.getElementById('combine-voice-a').value;
+      const voiceB = document.getElementById('combine-voice-b').value;
+      const weight = parseFloat(document.getElementById('blend-slider').value);
+      const customName = document.getElementById('combine-name').value.trim();
+      
+      const successAlert = document.getElementById('combine-success-alert');
+      const errorAlert = document.getElementById('combine-error-alert');
+      
+      successAlert.style.display = 'none';
+      errorAlert.style.display = 'none';
+      
+      if (!voiceA || !voiceB) {
+        showFeedback(errorAlert, "Please select both Voice A and Voice B");
+        return;
+      }
+      if (!customName) {
+        showFeedback(errorAlert, "Please enter a name for the combined profile");
+        return;
+      }
+      
+      const btn = document.getElementById('combine-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="loader"></span> Blending...';
+      
+      // OpenAI-compatible endpoint combine: POST /v1/audio/voices/combine
+      // Request format: { "base_voice": "af_bella", "blend_voice": "af_sky", "blend_ratio": 0.5, "output_voice_name": "bella_sky" }
+      const payload = {
+        base_voice: voiceA,
+        blend_voice: voiceB,
+        blend_ratio: weight,
+        output_voice_name: customName
+      };
+      
+      fetch('/v1/audio/voices/combine', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+        .then(async res => {
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.detail || "Failed to combine voices");
+          return data;
+        })
+        .then(data => {
+          btn.disabled = false;
+          btn.innerHTML = 'Blend Profile';
+          showFeedback(successAlert, `Voice blend created successfully: "${customName}"`);
+          document.getElementById('combine-name').value = '';
+          fetchVoices();
+        })
+        .catch(err => {
+          btn.disabled = false;
+          btn.innerHTML = 'Blend Profile';
+          showFeedback(errorAlert, err.message);
+        });
+    }
+
+    // File Drag & Drop Handlers
+    function handleDragOver(e) {
+      e.preventDefault();
+      document.getElementById('drop-zone').classList.add('dragover');
+    }
+    
+    function handleDragLeave(e) {
+      e.preventDefault();
+      document.getElementById('drop-zone').classList.remove('dragover');
+    }
+    
+    function handleDrop(e) {
+      e.preventDefault();
+      document.getElementById('drop-zone').classList.remove('dragover');
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        uploadVoiceFile(files[0]);
+      }
+    }
+    
+    function handleFileSelect(e) {
+      const files = e.target.files;
+      if (files.length > 0) {
+        uploadVoiceFile(files[0]);
+      }
+    }
+
+    // Upload voice file using POST /dashboard/api/voices/upload
+    function uploadVoiceFile(file) {
+      const label = document.getElementById('dropzone-label');
+      const progressContainer = document.getElementById('upload-progress-container');
+      const progressBar = document.getElementById('upload-progress-bar');
+      const successAlert = document.getElementById('upload-success-alert');
+      const errorAlert = document.getElementById('upload-error-alert');
+      
+      successAlert.style.display = 'none';
+      errorAlert.style.display = 'none';
+      
+      if (!file.name.endsWith('.pt')) {
+        showFeedback(errorAlert, "Only .pt voice files are supported");
+        return;
+      }
+      
+      label.textContent = `Uploading ${file.name}...`;
+      progressContainer.style.display = 'block';
+      progressBar.style.width = '0%';
+      
+      const formData = new FormData();
+      formData.append("file", file);
+      
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", "/dashboard/api/voices/upload", true);
+      
+      xhr.upload.onprogress = function(e) {
+        if (e.lengthComputable) {
+          const pct = (e.loaded / e.total) * 100;
+          progressBar.style.width = pct + '%';
+        }
+      };
+      
+      xhr.onload = function() {
+        progressContainer.style.display = 'none';
+        label.textContent = "Click or Drag & Drop voice file (.pt)";
+        
+        if (xhr.status === 200) {
+          showFeedback(successAlert, `Uploaded voice pack: ${file.name}`);
+          fetchVoices();
+        } else {
+          let errorMsg = "Upload failed";
+          try {
+            const res = JSON.parse(xhr.responseText);
+            errorMsg = res.detail || errorMsg;
+          } catch(e) {}
+          showFeedback(errorAlert, errorMsg);
+        }
+      };
+      
+      xhr.onerror = function() {
+        progressContainer.style.display = 'none';
+        label.textContent = "Click or Drag & Drop voice file (.pt)";
+        showFeedback(errorAlert, "Network error during upload");
+      };
+      
+      xhr.send(formData);
+    }
+
+    // Helper to flash alerts
+    function showFeedback(element, msg) {
+      element.textContent = msg;
+      element.style.display = 'block';
+      setTimeout(() => {
+        element.style.display = 'none';
+      }, 5000);
+    }
+
+    // Generate Speech (TTS playground)
+    function generateSpeech() {
+      const text = document.getElementById("text-to-synthesize").value.trim();
+      const voice = document.getElementById("voice-select").value;
+      const speed = parseFloat(document.getElementById("speed-slider").value);
+      const format = document.getElementById("format-select").value;
+      
+      const alertEl = document.getElementById("test-alert");
+      alertEl.style.display = 'none';
+      
+      if (!text) {
+        showFeedback(alertEl, "Please enter some text to generate");
+        return;
+      }
+      if (!voice) {
+        showFeedback(alertEl, "Please select a voice profile");
+        return;
+      }
+      
+      const btn = document.getElementById("generate-btn");
+      const btnText = document.getElementById("generate-btn-text");
+      
+      btn.disabled = true;
+      btnText.textContent = "Generating...";
+      
+      const payload = {
+        model: "kokoro",
+        input: text,
+        voice: voice,
+        speed: speed,
+        response_format: format
+      };
+      
+      const startTime = performance.now();
+      
+      fetch('/v1/audio/speech', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+        .then(async res => {
+          if (!res.ok) {
+            let errMsg = "Synthesis API failed";
+            try {
+              const data = await res.json();
+              errMsg = data.detail || errMsg;
+            } catch(e) {}
+            throw new Error(errMsg);
+          }
+          return res.blob();
+        })
+        .then(blob => {
+          const duration = ((performance.now() - startTime) / 1000).toFixed(2);
+          const charsPerSec = (text.length / duration).toFixed(1);
+          
+          // Clear old URL to avoid memory leaks
+          if (generatedAudioUrl) URL.revokeObjectURL(generatedAudioUrl);
+          
+          generatedAudioUrl = URL.createObjectURL(blob);
+          
+          const audioCard = document.getElementById('tts-audio-card');
+          const audioElement = document.getElementById('tts-audio-element');
+          
+          audioElement.src = generatedAudioUrl;
+          audioCard.classList.add('active');
+          
+          document.getElementById('audio-meta-time').textContent = `Latency: ${duration}s`;
+          document.getElementById('audio-meta-speed').textContent = `Speed: ${charsPerSec} Chars/Sec`;
+          
+          audioElement.play();
+          
+          btn.disabled = false;
+          btnText.textContent = "Generate Speech";
+        })
+        .catch(err => {
+          btn.disabled = false;
+          btnText.textContent = "Generate Speech";
+          showFeedback(alertEl, err.message);
+        });
+    }
+
+    // Download generated audio blob
+    function downloadAudio() {
+      if (!generatedAudioUrl) return;
+      const format = document.getElementById("format-select").value;
+      const a = document.createElement('a');
+      a.href = generatedAudioUrl;
+      a.download = `kokoro_tts_${Date.now()}.${format}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    // Fetch API Logs & Calls
+    function fetchCalls() {
+      fetch('/dashboard/api/calls')
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById('metric-total').textContent = data.length;
+          renderCallsTable(data);
+        })
+        .catch(err => console.error('Error fetching calls log:', err));
+    }
+
+    // Render the API Process Log Table
+    function renderCallsTable(calls) {
+      const tbody = document.getElementById('calls-log-body');
+      if (calls.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+              No API calls logged yet. Synthesize text to populate logs.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+      
+      let html = '';
+      calls.forEach(call => {
+        let statusClass = 'status-processing';
+        if (call.status === 'completed') statusClass = 'status-completed';
+        if (call.status === 'failed') statusClass = 'status-failed';
+        
+        let details = '';
+        if (call.payload && call.payload.text) {
+          details = `<strong>Text:</strong> "${call.payload.text}" | <strong>Voice:</strong> ${call.payload.voice}`;
+        } else if (call.path.includes('combine')) {
+          details = `<strong>Combine:</strong> ${call.payload.base_voice} + ${call.payload.blend_voice} (Ratio: ${call.payload.blend_ratio}) -> ${call.payload.output_voice_name}`;
+        } else {
+          details = `<span style="color:var(--text-muted)">No payload captured</span>`;
+        }
+        
+        const hasPayload = call.payload && Object.keys(call.payload).length > 0;
+        
+        html += `
+          <tr id="row-${call.id}">
+            <td>
+              ${hasPayload ? `
+                <button class="row-expand-btn" onclick="toggleRowDetails('${call.id}')">
+                  <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+              ` : ''}
+            </td>
+            <td style="color:var(--text-muted)">${call.timestamp}</td>
+            <td><strong style="color:var(--accent-cyan)">${call.method}</strong></td>
+            <td><code>${call.path}</code></td>
+            <td style="max-width: 400px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${details}</td>
+            <td>${call.duration !== null ? `${call.duration}s` : '<span style="color:var(--text-muted)">--</span>'}</td>
+            <td>
+              <span class="status-badge ${statusClass}">
+                ${call.status}
+              </span>
+            </td>
+          </tr>
+          ${hasPayload ? `
+            <tr id="details-${call.id}" class="detail-row">
+              <td colspan="7">
+                <div class="detail-container">${JSON.stringify(call.payload, null, 2)}</div>
+              </td>
+            </tr>
+          ` : ''}
+        `;
+      });
+      
+      tbody.innerHTML = html;
+    }
+
+    // Toggle expanding API log details row
+    function toggleRowDetails(id) {
+      const row = document.getElementById(`details-${id}`);
+      const btn = document.querySelector(`#row-${id} .row-expand-btn svg`);
+      if (row.classList.contains('expanded')) {
+        row.classList.remove('expanded');
+        btn.style.transform = 'rotate(0deg)';
+      } else {
+        row.classList.add('expanded');
+        btn.style.transform = 'rotate(180deg)';
+      }
+    }
+  </script>
+</body>
+</html>

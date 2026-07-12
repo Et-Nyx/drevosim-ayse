@@ -60,6 +60,7 @@ let
         misaki
         num2words
         phonemizer
+        psutil
         pydantic
         pydantic-settings
         pydub
@@ -124,6 +125,10 @@ let
         mkdir -p "$sp/api/src/voices/v1_0"
         cp ${src}/api/src/voices/v1_0/*.pt "$sp/api/src/voices/v1_0/"
 
+        # Dashboard UI and wrapper script
+        cp ${./dashboard_main.py} "$sp/api/src/dashboard_main.py"
+        cp ${./dashboard.html} "$sp/api/src/dashboard.html"
+
         # English G2P model required by misaki. Copy it (and its egg-info
         # metadata, so spacy.util.is_package finds it) into the same
         # site-packages so spacy can load it without downloading anything.
@@ -132,11 +137,12 @@ let
 
         mkdir -p "$out/bin"
         makeWrapper ${pythonEnv.interpreter} "$out/bin/kokoro-tts-api" \
-          --add-flags "-m uvicorn api.src.main:app" \
+          --add-flags "-m uvicorn api.src.dashboard_main:app" \
           --prefix PYTHONPATH : "$sp" \
           --prefix PATH : "${lib.makeBinPath [ pkgs.ffmpeg ]}" \
           --set-default ENABLE_WEB_PLAYER "false" \
           --set-default MODEL_DIR "$sp/api/src/models" \
+          --set-default DEFAULT_VOICES_DIR "$sp/api/src/voices/v1_0" \
           --set-default VOICES_DIR "$sp/api/src/voices/v1_0" \
           --set-default ESPEAK_DATA_PATH "${pkgs.espeak-ng}/share/espeak-ng-data"
 
@@ -156,7 +162,7 @@ let
     };
 in
 {
-  flake.nixosModules.sifa.servi.kokoro =
+  flake.nixosModules.sifa.servi.ai-chat.kokoro =
   { config, pkgs, lib, ... }:
   let
     cfg = config.drevosim.servi.kokoro;
@@ -229,6 +235,7 @@ in
           USE_GPU = lib.boolToString cfg.gpu;
           DEVICE_TYPE = if cfg.gpu then "cuda" else "cpu";
           PYTHONUNBUFFERED = "1";
+          VOICES_DIR = "${cfg.stateDir}/voices";
         };
 
         serviceConfig = {

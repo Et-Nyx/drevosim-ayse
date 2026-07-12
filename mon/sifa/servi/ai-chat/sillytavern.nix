@@ -6,7 +6,7 @@ let
   charLibSettingsKey = "SillyTavernCharacterGallery";
 in
 {
-  flake.nixosModules.sifa.servi.sillytavern =
+  flake.nixosModules.sifa.servi.ai-chat.sillytavern =
   { config, pkgs, lib, ... }:
   let
     cfg = config.drevosim.servi.sillytavern;
