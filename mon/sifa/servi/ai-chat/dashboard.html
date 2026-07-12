@@ -841,17 +841,18 @@
             <thead>
               <tr>
                 <th width="40"></th>
-                <th width="160">Timestamp</th>
+                <th width="150">Timestamp</th>
+                <th width="180">Caller (IP & Client)</th>
                 <th width="80">Method</th>
                 <th>API Endpoint</th>
                 <th>Details</th>
-                <th width="120">Latency</th>
-                <th width="120">Status</th>
+                <th width="100">Latency</th>
+                <th width="100">Status</th>
               </tr>
             </thead>
             <tbody id="calls-log-body">
               <tr>
-                <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 2rem;">
                   No API calls logged yet. Synthesize text to populate logs.
                 </td>
               </tr>
@@ -1530,7 +1531,7 @@
       if (calls.length === 0) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+            <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 2rem;">
               No API calls logged yet. Synthesize text to populate logs.
             </td>
           </tr>
@@ -1554,6 +1555,7 @@
         }
         
         const hasPayload = call.payload && Object.keys(call.payload).length > 0;
+        const callerName = call.client || 'Unknown';
         
         html += `
           <tr id="row-${call.id}">
@@ -1565,6 +1567,7 @@
               ` : ''}
             </td>
             <td style="color:var(--text-muted)">${call.timestamp}</td>
+            <td><code style="color:var(--accent-cyan); font-size:0.8rem;">${callerName}</code></td>
             <td><strong style="color:var(--accent-cyan)">${call.method}</strong></td>
             <td><code>${call.path}</code></td>
             <td style="max-width: 400px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${details}</td>
@@ -1577,7 +1580,7 @@
           </tr>
           ${hasPayload ? `
             <tr id="details-${call.id}" class="detail-row">
-              <td colspan="7">
+              <td colspan="8">
                 <div class="detail-container">${JSON.stringify(call.payload, null, 2)}</div>
               </td>
             </tr>

@@ -61,6 +61,7 @@ let
         num2words
         phonemizer
         psutil
+        python-multipart
         pydantic
         pydantic-settings
         pydub

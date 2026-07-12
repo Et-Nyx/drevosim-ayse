@@ -59,8 +59,12 @@ async def dashboard_middleware(request: Request, call_next):
     path = request.url.path
     method = request.method
     
+    # Debug logging to journalctl
+    print(f"[Dashboard Debug] {method} {path} - User-Agent: {request.headers.get('user-agent')}")
+    
     # Intercept API calls to track latency and payload details
-    is_tracked_path = path.startswith("/v1/") or path.startswith("/dashboard/api/")
+    # Only track public /v1/ calls (specifically TTS / voice management), NOT dashboard status polling!
+    is_tracked_path = path.startswith("/v1/")
     if not is_tracked_path:
         return await call_next(request)
         
@@ -106,12 +110,34 @@ async def dashboard_middleware(request: Request, call_next):
         except Exception as e:
             payload = {"error": f"Failed to parse body: {str(e)}"}
 
+    # Extract caller information from client IP and User-Agent
+    client_ip = request.client.host if request.client else "Unknown"
+    user_agent = request.headers.get("user-agent", "Unknown")
+    
+    source = "Unknown"
+    ua_lower = user_agent.lower()
+    if "sillytavern" in ua_lower:
+        source = "SillyTavern"
+    elif "mozilla" in ua_lower or "chrome" in ua_lower or "safari" in ua_lower:
+        source = "Dashboard/Browser"
+    elif "python" in ua_lower or "requests" in ua_lower:
+        source = "Python Script"
+    elif "curl" in ua_lower:
+        source = "curl"
+    else:
+        # extract short representation
+        source = user_agent.split('/')[0] if '/' in user_agent else user_agent
+        if len(source) > 20:
+            source = source[:20] + "..."
+
     start_time = time.time()
     call_info = {
         "id": request_id,
         "timestamp": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(start_time)),
         "path": path,
         "method": method,
+        "client": f"{client_ip} ({source})",
+        "user_agent": user_agent,
         "payload": payload,
         "status": "processing",
         "duration": None,
