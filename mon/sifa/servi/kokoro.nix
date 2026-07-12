@@ -204,6 +204,15 @@ in
         }
       ];
 
+      # Dedicated static user/group. This avoids the DynamicUser + StateDirectory
+      # conflict with preservation's bind-mount at /var/lib/kokoro-tts.
+      users.users.kokoro-tts = {
+        isSystemUser = true;
+        group = "kokoro-tts";
+        home = cfg.stateDir;
+      };
+      users.groups.kokoro-tts = { };
+
       networking.firewall.allowedTCPPorts = lib.mkIf cfg.openFirewall [ cfg.port ];
 
       systemd.services.kokoro-tts = {
@@ -224,11 +233,14 @@ in
 
         serviceConfig = {
           Type = "exec";
-          ExecStart = "${pkg}/bin/kokoro-tts-api";
+          # Pass host/port explicitly to uvicorn. The application reads HOST/PORT
+          # for its own settings, but uvicorn itself only honours CLI flags here.
+          ExecStart = "${pkg}/bin/kokoro-tts-api --host ${cfg.host} --port ${toString cfg.port}";
           Restart = "on-failure";
           RestartSec = "5";
 
-          DynamicUser = true;
+          User = "kokoro-tts";
+          Group = "kokoro-tts";
           SupplementaryGroups = lib.optional cfg.gpu "video";
           StateDirectory = "kokoro-tts";
           WorkingDirectory = cfg.stateDir;
@@ -242,7 +254,14 @@ in
         };
       };
 
-      preservation.preserveAt."/persistent".directories = lib.mkIf (config.preservation.enable or false) [ cfg.stateDir ];
+      preservation.preserveAt."/persistent".directories = lib.mkIf (config.preservation.enable or false) [
+        {
+          directory = cfg.stateDir;
+          user = "kokoro-tts";
+          group = "kokoro-tts";
+          mode = "0750";
+        }
+      ];
     };
   };
 
