@@ -187,14 +187,128 @@ An `igpu` specialisation is defined for fallback: it blacklists all nvidia kerne
 
 ### Kokoro TTS
 
-Configured in `mon/sifa/servi/kokoro.nix` and enabled for `ayse` in `mon/mehmangi/ayse/kokoro.nix`:
+Configured in `mon/sifa/servi/kokoro.nix` and enabled for `ayse` in `mon/mehmangi/ayse/kokoro.nix`.
 
-- Self-contained [Kokoro-FastAPI](https://github.com/remsky/Kokoro-FastAPI) v0.5.0 package bundled with model weights (`hexgrad/Kokoro-82M`) and all voice packs.
-- OpenAI-compatible HTTP API at `http://0.0.0.0:8880` (bind address and port are configurable).
-- CPU inference by default; GPU mode is opt-in via `drevosim.servi.kokoro.gpu = true` and targets the Pascal MX150 with `cudaCapabilities = [ "6.1" ]`.
-- English (`af_*`, `am_*`, etc.) and Portuguese (`pf_*`, `pm_*`) voices are included; clients select the voice per request.
-- `/var/lib/kokoro-tts` is preserved on `/persistent` so state survives reboots.
-- Firewall port 8880 is opened when the service is enabled.
+#### What it is
+
+A self-contained, offline [Kokoro-FastAPI](https://github.com/remsky/Kokoro-FastAPI) v0.5.0 server that exposes an OpenAI-compatible text-to-speech API. It bundles the Kokoro-82M v1.0 model, all voice packs, and the English G2P spaCy model so nothing is downloaded at runtime.
+
+#### Architecture
+
+| Component | Where it lives | Notes |
+|-----------|----------------|-------|
+| Application source | `/nix/store/...-kokoro-fastapi-0.5.0/lib/python3.13/site-packages/api/src/` | Read-only; updated by `nixos-rebuild` |
+| Model weights | `/nix/store/...-kokoro-fastapi-0.5.0/lib/python3.13/site-packages/api/src/models/v1_0/kokoro-v1_0.pth` | ~327 MB; Kokoro-82M v1.0 |
+| Voice packs | `/nix/store/...-kokoro-fastapi-0.5.0/lib/python3.13/site-packages/api/src/voices/v1_0/` | 67 `.pt` files |
+| English G2P model | Bundled `en_core_web_sm` | Required by misaki; prevents runtime downloads |
+| Runtime state | `/var/lib/kokoro-tts/` | Preserved on `/persistent`; mostly empty working directory |
+| Temp buffers | Private `/tmp` namespace | Cleaned automatically by the service |
+
+At boot the service loads the model into RAM (~1–2 GB), runs a warmup utterance with `af_heart`, and then serves requests. Each request tokenizes the text, loads the requested voice, runs inference, and streams the audio back. **No generated audio is stored on disk.**
+
+#### Configuration
+
+- **Bind address / port**: `0.0.0.0:8880` by default (`host`/`port` options).
+- **Inference**: CPU by default. GPU is opt-in via `drevosim.servi.kokoro.gpu = true`; it targets the Pascal MX150 using `cudaCapabilities = [ "6.1" ]`.
+- **Firewall**: port `8880/tcp` is opened when the service is enabled.
+
+#### OpenAI-compatible endpoints
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET /v1/models` | Returns the model list (`kokoro`) |
+| `GET /v1/audio/voices` | Returns the 67 available voices |
+| `POST /v1/audio/speech` | Generates audio from text |
+| `GET /health` | Health check |
+
+Example with `curl`:
+
+```bash
+# List voices
+curl http://127.0.0.1:8880/v1/audio/voices
+
+# Generate English speech
+curl http://127.0.0.1:8880/v1/audio/speech \
+  -H 'Content-Type: application/json' \
+  -d '{"model":"kokoro","input":"Hello from Kokoro.","voice":"af_heart","response_format":"mp3"}' \
+  -o hello.mp3
+
+# Generate Portuguese speech
+curl http://127.0.0.1:8880/v1/audio/speech \
+  -H 'Content-Type: application/json' \
+  -d '{"model":"kokoro","input":"Olá, isto é um teste.","voice":"pf_dora","response_format":"mp3"}' \
+  -o ola.mp3
+```
+
+`response_format` supports the standard OpenAI values: `mp3`, `wav`, `opus`, `aac`, `flac`.
+
+#### Voices
+
+There is a single model (`kokoro`, Kokoro-82M v1.0) and **67 voices**. Voice IDs use a two-letter prefix that indicates language/accent and gender:
+
+| Prefix | Language / accent | Gender | Count |
+|--------|-------------------|--------|-------|
+| `af_` | American English | Female | 18 |
+| `am_` | American English | Male | 12 |
+| `bf_` | British English | Female | 5 |
+| `bm_` | British English | Male | 6 |
+| `ef_` | Spanish | Female | 1 |
+| `em_` | Spanish | Male | 2 |
+| `ff_` | French | Female | 1 |
+| `hf_` | Hindi | Female | 2 |
+| `hm_` | Hindi | Male | 2 |
+| `if_` | Italian | Female | 1 |
+| `im_` | Italian | Male | 1 |
+| `jf_` | Japanese | Female | 4 |
+| `jm_` | Japanese | Male | 1 |
+| `pf_` | Portuguese | Female | 1 |
+| `pm_` | Portuguese | Male | 2 |
+| `zf_` | Chinese | Female | 4 |
+| `zm_` | Chinese | Male | 4 |
+
+Notable voices:
+
+- **English defaults**: `af_heart`, `af_bella`, `af_nova`, `am_adam`, `am_echo`
+- **Portuguese**: `pf_dora`, `pm_alex`, `pm_santa`
+- **Japanese**: `jf_alpha`, `jm_kumo`
+- **Spanish**: `ef_dora`, `em_alex`
+- **French**: `ff_siwis`
+
+Full voice list:
+
+```text
+af_alloy, af_aoede, af_bella, af_heart, af_jadzia, af_jessica, af_kore,
+af_nicole, af_nova, af_river, af_sarah, af_sky, af_v0, af_v0bella,
+af_v0irulan, af_v0nicole, af_v0sarah, af_v0sky, am_adam, am_echo,
+am_eric, am_fenrir, am_liam, am_michael, am_onyx, am_puck, am_santa,
+am_v0adam, am_v0gurney, am_v0michael, bf_alice, bf_emma, bf_lily,
+bf_v0emma, bf_v0isabella, bm_daniel, bm_fable, bm_george, bm_lewis,
+bm_v0george, bm_v0lewis, ef_dora, em_alex, em_santa, ff_siwis,
+hf_alpha, hf_beta, hm_omega, hm_psi, if_sara, im_nicola, jf_alpha,
+jf_gongitsune, jf_nezumi, jf_tebukuro, jm_kumo, pf_dora, pm_alex,
+pm_santa, zf_xiaobei, zf_xiaoni, zf_xiaoxiao, zf_xiaoyi, zm_yunjian,
+zm_yunxi, zm_yunxia, zm_yunyang
+```
+
+To preview a voice quickly:
+
+```bash
+VOICE=af_alloy
+curl http://127.0.0.1:8880/v1/audio/speech \
+  -H 'Content-Type: application/json' \
+  -d "{\"model\":\"kokoro\",\"input\":\"This is ${VOICE}.\",\"voice\":\"${VOICE}\",\"response_format\":\"mp3\"}" \
+  -o /tmp/${VOICE}.mp3
+```
+
+#### Client configuration
+
+- **SillyTavern** (already configured): `Extensions → TTS → OpenAI`, URL `http://127.0.0.1:8880/v1`, voice `af_heart`.
+- **Open WebUI**: set TTS engine to OpenAI-compatible, URL `http://<ayse-ip>:8880/v1`, API key any dummy value, pick a voice.
+- **Any OpenAI TTS client**: point it at `http://<ayse-ip>:8880/v1` and use a voice ID from `/v1/audio/voices`.
+
+#### State and persistence
+
+`/var/lib/kokoro-tts` is preserved on `/persistent` so any runtime state survives reboots. In practice the service keeps the model and voices in the Nix store, so the state directory stays small.
 
 ### SillyTavern
 
