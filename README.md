@@ -72,6 +72,8 @@ The flake is organized in a dendritic (tree-like) structure inspired by [Drevosi
 │       │   ├── mako.nix
 │       │   ├── polkit.nix
 │       │   ├── tul.nix
+│       │   ├── kokoro/    # Kokoro TTS API server
+│       │   │   └── module.nix
 │       │   └── faylu/     # raw config files (filtered from import-tree)
 │       │       └── mako.ini
 │       ├── terminal/      # terminal emulators, shells & CLI tools
@@ -166,7 +168,7 @@ sudo nixos-rebuild switch --flake .
 - `users.mutableUsers = false` so `/etc/shadow` always matches the NixOS configuration.
 - Stale Chromium lock files and KWallet data are cleaned on every boot.
 - Preserved home directories include `~/.config` (KDE Plasma + Chromium config), `~/.local/share` and `~/.local/state` (application data), `~/.ssh`, and the standard XDG user folders including `~/Games` (used by Heroic and Steam for large game installs that would otherwise fill the tmpfs root).
-- Preserved system state includes `/etc/ssh`, `/var/lib/bluetooth` (pairing keys), `/var/lib/NetworkManager/system-connections`, and `/var/lib/nixos` (user/group database).
+- Preserved system state includes `/etc/ssh`, `/var/lib/bluetooth` (pairing keys), `/var/lib/NetworkManager/system-connections`, `/var/lib/nixos` (user/group database), and `/var/lib/kokoro-tts` (TTS service state).
 - Bluetooth is enabled (`hardware.bluetooth`) with `powerOnBoot = true` and `bluez` in `systemPackages`.
 
 ### NVIDIA (Optimus / PRIME)
@@ -182,6 +184,17 @@ Configured in `mon/mehmangi/ayse/nukleus/nvidia.nix`. The host (`ayse`) is a Del
 - `boot.kernelParams = [ "pcie_aspm=off" "nvidia-drm.modeset=1" ]` and a udev rule force the dGPU out of D3cold at boot. Without this, the firmware-parked dGPU is undetectable.
 
 An `igpu` specialisation is defined for fallback: it blacklists all nvidia kernel modules, forces `services.xserver.videoDrivers = [ "modesetting" ]`, and unsets the PRIME env vars. Boot it from the systemd-boot menu if the dGPU fails to wake.
+
+### Kokoro TTS
+
+Configured in `mon/sifa/servi/kokoro/module.nix` and enabled for `ayse` in `mon/mehmangi/ayse/kokoro.nix`:
+
+- Self-contained [Kokoro-FastAPI](https://github.com/remsky/Kokoro-FastAPI) v0.5.0 package bundled with model weights (`hexgrad/Kokoro-82M`) and all voice packs.
+- OpenAI-compatible HTTP API at `http://0.0.0.0:8880` (bind address and port are configurable).
+- CPU inference by default; GPU mode is opt-in via `drevosim.servi.kokoro.gpu = true` and targets the Pascal MX150 with `cudaCapabilities = [ "6.1" ]`.
+- English (`af_*`, `am_*`, etc.) and Portuguese (`pf_*`, `pm_*`) voices are included; clients select the voice per request.
+- `/var/lib/kokoro-tts` is preserved on `/persistent` so state survives reboots.
+- Firewall port 8880 is opened when the service is enabled.
 
 ### Gaming
 
