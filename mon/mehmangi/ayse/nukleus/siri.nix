@@ -21,6 +21,12 @@
         group = "root";
         mode = "0400";
       };
+      ayse-go-relay = {
+        file = self + /siri/ayse-go-relay.age;
+        owner = "root";
+        group = "root";
+        mode = "0400";
+      };
     };
   };
 }

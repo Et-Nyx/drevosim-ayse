@@ -6,6 +6,7 @@
     environment.systemPackages = with pkgs; [
       neovim
       zed-editor
+      antigravity-cli
     ];
   };
 }

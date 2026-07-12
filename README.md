@@ -73,6 +73,7 @@ The flake is organized in a dendritic (tree-like) structure inspired by [Drevosi
 │       │   ├── polkit.nix
 │       │   ├── tul.nix
 │       │   ├── kokoro.nix # Kokoro TTS API server
+│       │   ├── sillytavern.nix # SillyTavern web UI + extensions
 │       │   └── faylu/     # raw config files (filtered from import-tree)
 │       │       └── mako.ini
 │       ├── terminal/      # terminal emulators, shells & CLI tools
@@ -167,7 +168,7 @@ sudo nixos-rebuild switch --flake .
 - `users.mutableUsers = false` so `/etc/shadow` always matches the NixOS configuration.
 - Stale Chromium lock files and KWallet data are cleaned on every boot.
 - Preserved home directories include `~/.config` (KDE Plasma + Chromium config), `~/.local/share` and `~/.local/state` (application data), `~/.ssh`, and the standard XDG user folders including `~/Games` (used by Heroic and Steam for large game installs that would otherwise fill the tmpfs root).
-- Preserved system state includes `/etc/ssh`, `/var/lib/bluetooth` (pairing keys), `/var/lib/NetworkManager/system-connections`, `/var/lib/nixos` (user/group database), and `/var/lib/kokoro-tts` (TTS service state).
+- Preserved system state includes `/etc/ssh`, `/var/lib/bluetooth` (pairing keys), `/var/lib/NetworkManager/system-connections`, `/var/lib/nixos` (user/group database), `/var/lib/kokoro-tts` (TTS service state), and `/var/lib/SillyTavern` (SillyTavern data).
 - Bluetooth is enabled (`hardware.bluetooth`) with `powerOnBoot = true` and `bluez` in `systemPackages`.
 
 ### NVIDIA (Optimus / PRIME)
@@ -194,6 +195,18 @@ Configured in `mon/sifa/servi/kokoro.nix` and enabled for `ayse` in `mon/mehmang
 - English (`af_*`, `am_*`, etc.) and Portuguese (`pf_*`, `pm_*`) voices are included; clients select the voice per request.
 - `/var/lib/kokoro-tts` is preserved on `/persistent` so state survives reboots.
 - Firewall port 8880 is opened when the service is enabled.
+
+### SillyTavern
+
+Configured in `mon/sifa/servi/sillytavern.nix` and enabled for `ayse` in `mon/mehmangi/ayse/sillytavern.nix`:
+
+- [SillyTavern](https://sillytavern.app/) web UI on `http://0.0.0.0:8000`.
+- Whitelist allows localhost, IPv6 localhost, and the Tailscale CGNAT range (`100.64.0.0/10`).
+- State (`/var/lib/SillyTavern`) preserved on `/persistent`.
+- TTS pre-configured to use the local Kokoro service (`http://127.0.0.1:8880/v1`) with the `af_heart` voice.
+- Chat backend pre-configured to use the OpenCode Go relay via Cloudflare Worker; the relay access token is stored in `siri/ayse-go-relay.age` and decrypted by agenix.
+- Curated third-party extensions bundled declaratively (CharacterLibrary, TopInfoBar, QuickPersona, PromptInspector, TypingIndicator, Notebook, Objective, Ultimate-ChatAssistant).
+- CharacterLibrary's `cl-helper` server plugin enabled; FlareSolverr is started automatically for Cloudflare bypass.
 
 ### Gaming
 

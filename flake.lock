@@ -193,7 +193,143 @@
         "nixpkgs": "nixpkgs",
         "nixpkgs-stable": "nixpkgs-stable",
         "preservation": "preservation",
+        "sillytavern-characterlibrary": "sillytavern-characterlibrary",
+        "sillytavern-notebook": "sillytavern-notebook",
+        "sillytavern-objective": "sillytavern-objective",
+        "sillytavern-promptinspector": "sillytavern-promptinspector",
+        "sillytavern-quickpersona": "sillytavern-quickpersona",
+        "sillytavern-topinfobar": "sillytavern-topinfobar",
+        "sillytavern-typingindicator": "sillytavern-typingindicator",
+        "sillytavern-ultimate-chatassistant": "sillytavern-ultimate-chatassistant",
         "wrapper-modules": "wrapper-modules"
+      }
+    },
+    "sillytavern-characterlibrary": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1783725802,
+        "narHash": "sha256-t+N535IhtkKhDEXpuAxrsfHxVNeq5Uw3LBwdqgzbzV0=",
+        "owner": "Sillyanonymous",
+        "repo": "SillyTavern-CharacterLibrary",
+        "rev": "5fe422a17aca479e94de3a50bde815c51e5d7937",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Sillyanonymous",
+        "repo": "SillyTavern-CharacterLibrary",
+        "type": "github"
+      }
+    },
+    "sillytavern-notebook": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1775426738,
+        "narHash": "sha256-dCIj30ckaGYjZGIP7NnrN/HQRIqBc+bKPfSXzMj0Fvc=",
+        "owner": "SillyTavern",
+        "repo": "Extension-Notebook",
+        "rev": "4737cd36d5f53cacc76203dd6dbcb673bafe13b4",
+        "type": "github"
+      },
+      "original": {
+        "owner": "SillyTavern",
+        "repo": "Extension-Notebook",
+        "type": "github"
+      }
+    },
+    "sillytavern-objective": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1749311375,
+        "narHash": "sha256-14bxgmAy06mFTFGPu992HBhIj309K1pdMuUMKglYnLA=",
+        "owner": "SillyTavern",
+        "repo": "Extension-Objective",
+        "rev": "c04a263e2007231f13b8f17d4adcb1aa2a5b75f8",
+        "type": "github"
+      },
+      "original": {
+        "owner": "SillyTavern",
+        "repo": "Extension-Objective",
+        "type": "github"
+      }
+    },
+    "sillytavern-promptinspector": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1767953322,
+        "narHash": "sha256-ji2watNXWfoAVjUVa4Y4P3rgs+uLqR8O/JGvendyPXM=",
+        "owner": "SillyTavern",
+        "repo": "Extension-PromptInspector",
+        "rev": "97a9fd90afbc156db27478e9097b143dc27b9c7a",
+        "type": "github"
+      },
+      "original": {
+        "owner": "SillyTavern",
+        "repo": "Extension-PromptInspector",
+        "type": "github"
+      }
+    },
+    "sillytavern-quickpersona": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1760298281,
+        "narHash": "sha256-tcpEZ1NQpizv6r+GVOItxtuKNj5qx7xM9TOVJvwOMFg=",
+        "owner": "SillyTavern",
+        "repo": "Extension-QuickPersona",
+        "rev": "5509fb6bee903c833683cb860fbf437d4479b1cb",
+        "type": "github"
+      },
+      "original": {
+        "owner": "SillyTavern",
+        "repo": "Extension-QuickPersona",
+        "type": "github"
+      }
+    },
+    "sillytavern-topinfobar": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1749843519,
+        "narHash": "sha256-WWAijTFpfzR5/z4MlNKIpRmQhlbjhxmTJ3s4dAal7qE=",
+        "owner": "SillyTavern",
+        "repo": "Extension-TopInfoBar",
+        "rev": "930be54913d90abd90ebd698ddd81affa924e2e1",
+        "type": "github"
+      },
+      "original": {
+        "owner": "SillyTavern",
+        "repo": "Extension-TopInfoBar",
+        "type": "github"
+      }
+    },
+    "sillytavern-typingindicator": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1749837806,
+        "narHash": "sha256-FV6ITk+7q5HuK2w5Wd7KC8MAtF7fkeDwJbrMM1Es7IQ=",
+        "owner": "SillyTavern",
+        "repo": "Extension-TypingIndicator",
+        "rev": "3c5ef68e2c4bc4b152078965a153f12aa5aad513",
+        "type": "github"
+      },
+      "original": {
+        "owner": "SillyTavern",
+        "repo": "Extension-TypingIndicator",
+        "type": "github"
+      }
+    },
+    "sillytavern-ultimate-chatassistant": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1773769303,
+        "narHash": "sha256-gQYYdDJhYU1IHFg7x0rjk6yr/NCARbj8Wn6xFV8eZXk=",
+        "owner": "BobTheBinChicken",
+        "repo": "Ultimate-ChatAssistant",
+        "rev": "39c9b0b7463397a48aca26c0b9ef74a8415ae940",
+        "type": "github"
+      },
+      "original": {
+        "owner": "BobTheBinChicken",
+        "repo": "Ultimate-ChatAssistant",
+        "type": "github"
       }
     },
     "systems": {
