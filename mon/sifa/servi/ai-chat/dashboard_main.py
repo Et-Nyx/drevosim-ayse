@@ -53,129 +53,133 @@ def initialize_voices():
 # Initialize voices on load
 initialize_voices()
 
-# Middleware to intercept and log requests
-@app.middleware("http")
-async def dashboard_middleware(request: Request, call_next):
-    path = request.url.path
-    method = request.method
-    
-    # Debug logging to journalctl
-    print(f"[Dashboard Debug] {method} {path} - User-Agent: {request.headers.get('user-agent')}")
-    
-    # Intercept API calls to track latency and payload details
-    # Only track public /v1/ calls (specifically TTS / voice management), NOT dashboard status polling!
-    is_tracked_path = path.startswith("/v1/")
-    if not is_tracked_path:
-        return await call_next(request)
+# Native ASGI Middleware to safely intercept and log requests without Starlette BaseHTTPMiddleware stream bugs
+class DashboardASGIMiddleware:
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        path = scope["path"]
+        method = scope["method"]
         
-    request_id = f"req_{time.time_ns()}"
-    
-    # Parse request payload for speech generation
-    payload = {}
-    if path == "/v1/audio/speech" and method == "POST":
-        try:
-            body = await request.body()
-            # Restore request receive channel so the endpoint can read it again in a stateful way
-            original_receive = request._receive
-            body_returned = False
-            async def receive():
-                nonlocal body_returned
-                if not body_returned:
-                    body_returned = True
-                    return {"type": "http.request", "body": body, "more_body": False}
-                return await original_receive()
-            request._receive = receive
-            
-            data = json.loads(body)
-            raw_text = data.get("input", "")
-            text_preview = raw_text[:100] + "..." if len(raw_text) > 100 else raw_text
-            payload = {
-                "text": text_preview,
-                "text_length": len(raw_text),
-                "voice": data.get("voice", ""),
-                "speed": data.get("speed", 1.0),
-                "response_format": data.get("response_format", "mp3")
-            }
-        except Exception as e:
-            payload = {"error": f"Failed to parse body: {str(e)}"}
-            
-    elif path == "/v1/audio/voices/combine" and method == "POST":
-        try:
-            body = await request.body()
-            original_receive = request._receive
-            body_returned = False
-            async def receive():
-                nonlocal body_returned
-                if not body_returned:
-                    body_returned = True
-                    return {"type": "http.request", "body": body, "more_body": False}
-                return await original_receive()
-            request._receive = receive
-            
-            data = json.loads(body)
-            payload = {
-                "base_voice": data.get("base_voice", ""),
-                "blend_voice": data.get("blend_voice", ""),
-                "blend_ratio": data.get("blend_ratio", 0.5),
-                "output_voice_name": data.get("output_voice_name", "")
-            }
-        except Exception as e:
-            payload = {"error": f"Failed to parse body: {str(e)}"}
+        # Exclude dashboard status polling noise
+        is_tracked_path = path.startswith("/v1/")
+        if not is_tracked_path:
+            await self.app(scope, receive, send)
+            return
 
-    # Extract caller information from client IP and User-Agent
-    client_ip = request.client.host if request.client else "Unknown"
-    user_agent = request.headers.get("user-agent", "Unknown")
-    
-    source = "Unknown"
-    ua_lower = user_agent.lower()
-    if "sillytavern" in ua_lower:
-        source = "SillyTavern"
-    elif "mozilla" in ua_lower or "chrome" in ua_lower or "safari" in ua_lower:
-        source = "Dashboard/Browser"
-    elif "python" in ua_lower or "requests" in ua_lower:
-        source = "Python Script"
-    elif "curl" in ua_lower:
-        source = "curl"
-    else:
-        # extract short representation
-        source = user_agent.split('/')[0] if '/' in user_agent else user_agent
-        if len(source) > 20:
-            source = source[:20] + "..."
+        # Extract User-Agent header safely
+        headers_dict = dict(scope.get("headers", []))
+        user_agent_bytes = headers_dict.get(b"user-agent", b"")
+        user_agent = user_agent_bytes.decode("utf-8", "ignore")
 
-    start_time = time.time()
-    call_info = {
-        "id": request_id,
-        "timestamp": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(start_time)),
-        "path": path,
-        "method": method,
-        "client": f"{client_ip} ({source})",
-        "user_agent": user_agent,
-        "payload": payload,
-        "status": "processing",
-        "duration": None,
-        "status_code": None,
-        "error": None
-    }
-    
-    # Log request in memory
-    api_calls.appendleft(call_info)
-    active_processes[request_id] = call_info
-    
-    try:
-        response = await call_next(request)
-        duration = time.time() - start_time
-        call_info["status"] = "completed"
-        call_info["duration"] = round(duration, 3)
-        call_info["status_code"] = response.status_code
-        return response
-    except Exception as e:
-        duration = time.time() - start_time
-        call_info["status"] = "failed"
-        call_info["duration"] = round(duration, 3)
-        call_info["error"] = str(e)
-        raise e
-    finally:
-        active_processes.pop(request_id, None)
+        # Debug logging to journalctl
+        print(f"[Dashboard Debug] {method} {path} - User-Agent: {user_agent}")
+
+        request_id = f"req_{time.time_ns()}"
+        start_time = time.time()
+        
+        # Capture body chunks passively as they are read by the endpoint
+        body_chunks = []
+        async def custom_receive():
+            message = await receive()
+            if message["type"] == "http.request":
+                body_chunks.append(message.get("body", b""))
+            return message
+
+        status_code = [200]
+        async def custom_send(message):
+            if message["type"] == "http.response.start":
+                status_code[0] = message["status"]
+            await send(message)
+
+        # Log entry placeholder
+        client_ip = scope.get("client", ["Unknown"])[0] if scope.get("client") else "Unknown"
+        log_entry = {
+            "id": request_id,
+            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "client": f"{client_ip} (Intercepting...)",
+            "method": method,
+            "path": path,
+            "payload": {},
+            "status": "processing",
+            "status_code": None,
+            "duration": None,
+            "error": None
+        }
+        
+        # Add to global logs cache
+        api_calls.appendleft(log_entry)
+        active_processes[request_id] = log_entry
+
+        # Execute application
+        try:
+            await self.app(scope, custom_receive, custom_send)
+            
+            # Request completed - now parse the captured body chunks
+            full_body = b"".join(body_chunks)
+            payload = {}
+            if full_body:
+                try:
+                    data = json.loads(full_body)
+                    if path == "/v1/audio/speech" and method == "POST":
+                        raw_text = data.get("input", "")
+                        text_preview = raw_text[:100] + "..." if len(raw_text) > 100 else raw_text
+                        payload = {
+                            "text": text_preview,
+                            "text_length": len(raw_text),
+                            "voice": data.get("voice", ""),
+                            "speed": data.get("speed", 1.0),
+                            "response_format": data.get("response_format", "mp3")
+                        }
+                    elif path == "/v1/audio/voices/combine" and method == "POST":
+                        payload = {
+                            "base_voice": data.get("base_voice", ""),
+                            "blend_voice": data.get("blend_voice", ""),
+                            "blend_ratio": data.get("blend_ratio", 0.5),
+                            "output_voice_name": data.get("output_voice_name", "")
+                        }
+                except Exception as e:
+                    payload = {"error": f"Failed to parse payload: {str(e)}"}
+
+            # Identify source
+            source = "Unknown"
+            ua_lower = user_agent.lower()
+            if "sillytavern" in ua_lower:
+                source = "SillyTavern"
+            elif "mozilla" in ua_lower or "chrome" in ua_lower or "safari" in ua_lower:
+                source = "Dashboard/Browser"
+            elif "python" in ua_lower or "requests" in ua_lower:
+                source = "Python Script"
+            elif "curl" in ua_lower:
+                source = "curl"
+            else:
+                source = user_agent.split('/')[0] if '/' in user_agent else user_agent
+                if len(source) > 20:
+                    source = source[:20]
+
+            log_entry["client"] = f"{client_ip} ({source})"
+            log_entry["payload"] = payload
+            log_entry["status_code"] = status_code[0]
+            log_entry["status"] = "completed" if status_code[0] < 400 else "failed"
+            log_entry["duration"] = round(time.time() - start_time, 2)
+        except Exception as e:
+            # Request crashed
+            duration = round(time.time() - start_time, 2)
+            log_entry["duration"] = duration
+            log_entry["status"] = "failed"
+            log_entry["status_code"] = 500
+            log_entry["error"] = str(e)
+            raise e
+        finally:
+            active_processes.pop(request_id, None)
+
+# Add native ASGI middleware to application
+app.add_middleware(DashboardASGIMiddleware)
 
 
 # --- DASHBOARD API ENDPOINTS ---
