@@ -1245,8 +1245,7 @@
       fetch('/v1/audio/voices')
         .then(res => res.json())
         .then(data => {
-          // Kokoro-FastAPI v0.5.0 structure usually returns { "voices": [...] }
-          loadedVoices = data.voices || [];
+          loadedVoices = (data.voices || []).map(v => typeof v === 'object' ? v.id : v);
           document.getElementById('voices-count').textContent = `${loadedVoices.length} profiles loaded`;
           
           populateVoiceDropdowns();
