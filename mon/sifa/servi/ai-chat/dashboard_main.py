@@ -269,3 +269,24 @@ async def delete_voice(filename: str):
         return {"status": "success", "message": f"Deleted voice profile {safe_filename}"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to delete voice: {str(e)}")
+
+# --- COMPATIBILITY FALLBACKS FOR SILLYTAVERN ---
+# SillyTavern's OpenAI Compatible TTS provider sends requests directly to the base URL (/v1 or /v1/)
+# instead of appending /audio/speech. We redirect these requests with HTTP 307 (preserving method & payload).
+from fastapi.responses import RedirectResponse
+
+@app.post("/v1")
+async def openai_v1_post_fallback(request: Request):
+    return RedirectResponse(url="/v1/audio/speech", status_code=307)
+
+@app.post("/v1/")
+async def openai_v1_slash_post_fallback(request: Request):
+    return RedirectResponse(url="/v1/audio/speech", status_code=307)
+
+@app.get("/v1")
+async def openai_v1_get_fallback(request: Request):
+    return RedirectResponse(url="/v1/audio/voices", status_code=307)
+
+@app.get("/v1/")
+async def openai_v1_slash_get_fallback(request: Request):
+    return RedirectResponse(url="/v1/audio/voices", status_code=307)

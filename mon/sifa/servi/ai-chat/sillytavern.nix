@@ -121,15 +121,27 @@ in
           --arg relayModel "${cfg.llmDefaultModel}" \
           --argjson hasKey "$([ -n \"$RELAY_KEY\" ] && echo true || echo false)" \
           '.firstRun = false
+           | .tts = (.tts // {})
+           | .tts.enabled = true
+           | .tts.ttsEnabled = true
+           | .tts.provider = "OpenAI Compatible"
+           | .tts.currentProvider = "OpenAI Compatible"
+           | .tts."OpenAI Compatible" = (.tts."OpenAI Compatible" // {})
+           | .tts."OpenAI Compatible".provider_endpoint = $ttsUrl
+           | .tts."OpenAI Compatible".model = "kokoro"
+           | .tts."OpenAI Compatible".available_voices = [
+               "af_heart", "af_alloy", "af_aoede", "af_bella", "af_jadzia", 
+               "af_jessica", "af_kore", "af_nicole", "af_nova", "af_river", 
+               "af_sarah", "af_sky", "am_adam", "am_echo", "am_eric", 
+               "am_fenrir", "am_liam", "am_michael", "am_onyx", "am_puck", 
+               "bf_emma", "bf_isabella", "bm_daniel", "bm_george"
+             ]
+           | .tts."OpenAI Compatible".voiceMap = (.tts."OpenAI Compatible".voiceMap // {
+               "[Default Voice]": $voice,
+               "User": "[Default Voice]"
+             })
            | .extension_settings = (.extension_settings // {})
-           | .extension_settings.tts = (.extension_settings.tts // {})
-           | .extension_settings.tts.enabled = true
-           | .extension_settings.tts.provider = "OpenAI"
-           | .extension_settings.tts.openai = (.extension_settings.tts.openai // {})
-           | .extension_settings.tts.openai.url = $ttsUrl
-           | .extension_settings.tts.openai.key = (.extension_settings.tts.openai.key // "dummy")
-           | .extension_settings.tts.openai.voice = (.extension_settings.tts.openai.voice // $voice)
-           | .extension_settings.tts.openai.model = (.extension_settings.tts.openai.model // "kokoro")
+           | .extension_settings.tts = .tts
            | .extension_settings."${charLibSettingsKey}" = (.extension_settings."${charLibSettingsKey}" // {})
            | if $hasKey then
                .main_api = (.main_api // "openai")
@@ -148,20 +160,32 @@ in
           --argjson hasKey "$([ -n \"$RELAY_KEY\" ] && echo true || echo false)" \
           '{
              firstRun: false,
-             extension_settings: {
-               tts: {
-                 enabled: true,
-                 provider: "OpenAI",
-                 openai: {
-                   url: $ttsUrl,
-                   key: "dummy",
-                   voice: $voice,
-                   model: "kokoro"
+             tts: {
+               enabled: true,
+               ttsEnabled: true,
+               provider: "OpenAI Compatible",
+               currentProvider: "OpenAI Compatible",
+               "OpenAI Compatible": {
+                 provider_endpoint: $ttsUrl,
+                 model: "kokoro",
+                 available_voices: [
+                   "af_heart", "af_alloy", "af_aoede", "af_bella", "af_jadzia", 
+                   "af_jessica", "af_kore", "af_nicole", "af_nova", "af_river", 
+                   "af_sarah", "af_sky", "am_adam", "am_echo", "am_eric", 
+                   "am_fenrir", "am_liam", "am_michael", "am_onyx", "am_puck", 
+                   "bf_emma", "bf_isabella", "bm_daniel", "bm_george"
+                 ],
+                 voiceMap: {
+                   "[Default Voice]": $voice,
+                   "User": "[Default Voice]"
                  }
-               },
-               "'"${charLibSettingsKey}"'": {}
+               }
              }
            }
+           | .extension_settings = {
+               tts: .tts,
+               "'"${charLibSettingsKey}"'": {}
+             }
            | if $hasKey then
                .main_api = "openai"
                | .oai_settings = {
