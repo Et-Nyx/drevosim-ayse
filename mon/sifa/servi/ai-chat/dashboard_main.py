@@ -75,9 +75,15 @@ async def dashboard_middleware(request: Request, call_next):
     if path == "/v1/audio/speech" and method == "POST":
         try:
             body = await request.body()
-            # Restore request receive channel so the endpoint can read it again
+            # Restore request receive channel so the endpoint can read it again in a stateful way
+            original_receive = request._receive
+            body_returned = False
             async def receive():
-                return {"type": "http.request", "body": body, "more_body": False}
+                nonlocal body_returned
+                if not body_returned:
+                    body_returned = True
+                    return {"type": "http.request", "body": body, "more_body": False}
+                return await original_receive()
             request._receive = receive
             
             data = json.loads(body)
@@ -96,8 +102,14 @@ async def dashboard_middleware(request: Request, call_next):
     elif path == "/v1/audio/voices/combine" and method == "POST":
         try:
             body = await request.body()
+            original_receive = request._receive
+            body_returned = False
             async def receive():
-                return {"type": "http.request", "body": body, "more_body": False}
+                nonlocal body_returned
+                if not body_returned:
+                    body_returned = True
+                    return {"type": "http.request", "body": body, "more_body": False}
+                return await original_receive()
             request._receive = receive
             
             data = json.loads(body)
