@@ -20,6 +20,7 @@ other homebrew FTP payload) at **`192.168.15.200:2121`**.
 - [Refreshing the view](#refreshing-the-view)
 - [Common tasks](#common-tasks)
 - [Cache and performance tuning](#cache-and-performance-tuning)
+- [Stability and speed tuning](#stability-and-speed-tuning)
 - [Troubleshooting](#troubleshooting)
 - [Service management](#service-management)
 - [Security and limits](#security-and-limits)
@@ -74,6 +75,34 @@ When configured as a `fileSystems` mount unit, systemd kills it after 90
 seconds (the default `TimeoutStartSec`) and the mount dies. Running it as a
 service sidesteps the readiness problem entirely.
 
+### Why `ExecStartPre` and a real `fusermount3` path
+
+A FUSE mount whose userspace process has died leaves a "stale" entry in the
+kernel. Reads against a stale mount return `Transport endpoint is not
+connected`, and a new mount on the same path fails with `directory already
+mounted`. If the previous instance was killed by SIGKILL or ran out of disk
+(so `fusermount3` could not run), the stale mount persists and the service
+crash-loops on every restart.
+
+The service is therefore self-healing:
+
+- `ExecStartPre` calls `fusermount3 -u /mnt/ps4` (idempotent — no-op if
+  nothing is mounted) before each start, so any stale entry from a previous
+  crash is cleared automatically.
+- `ExecStop` calls `fusermount3 -u /mnt/ps4` on graceful shutdown, so a
+  clean stop also unmounts.
+
+Both use the absolute path from the `fuse3` package (`/nix/store/…/bin/fusermount3`),
+not `/bin/fusermount3`, which does not exist on NixOS.
+
+### VFS cache size cap
+
+rclone's VFS cache is held at `/var/cache/rclone-ps4/`, which lives on the
+3.9 GB tmpfs root. Without a size cap, an upload to an unreachable PS4 will
+fill the root and take down rclone. The mount is invoked with
+`--vfs-cache-max-size=1G` and `--vfs-cache-max-age=24h`, so the cache can
+never grow beyond 1 GB and entries expire after a day.
+
 ### Why a password at all
 
 rclone's FTP backend decodes every password source as base64. Even when the
@@ -92,18 +121,45 @@ obscured string stays valid because the module always uses
 
 All options live under `drevosim.servi.ftp-ps4.*`. Defaults:
 
+### Connection
+
 | Option | Default | Description |
 |--------|---------|-------------|
 | `enable` | `false` | Master switch. Set to `true` in `estandar.nix` to enable. |
 | `host` | `192.168.15.200` | IP or hostname of the PS4. |
-| `port` | `2121` | FTP port. |
+| `port` | `2121` | FTP server port. |
 | `mountPoint` | `/mnt/ps4` | Where the PS4 filesystem appears on ayse. |
 | `user` | `anonymous` | FTP username. |
 | `readOnly` | `false` | If `true`, the mount is read-only. |
 | `idleTimeoutSec` | `300` | (legacy) Idle timeout; currently unused because we use a service, not an automount. |
 
-To change any of these, edit `mon/mehmangi/ayse/estandar.nix` (or override
-in your host file):
+### FTP backend (connection stability)
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `disableEpsv` | `true` | Force plain PASV instead of EPSV. The PS4's EPSV often produces unusable data-port allocations. |
+| `disableMlsd` | `true` | Force plain LIST instead of MLSD. The PS4's MLSD responses are inconsistent. |
+| `ftpConcurrency` | `1` | Number of FTP control connections. The PS4 FTP server is single-threaded; >1 corrupts listings. |
+| `timeout` | `30s` | Per-FTP-command timeout. |
+| `contimeout` | `30s` | FTP control-connection timeout. |
+| `lowLevelRetries` | `20` | How many times to retry a failed FTP command before giving up. |
+
+### Mount and VFS (throughput and accuracy)
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `bufferSize` | `64Mi` | In-memory read buffer per open file. Larger = smoother large-file copies. |
+| `vfsReadAhead` | `128Mi` | Disk-buffered read-ahead for sequential reads. |
+| `transfers` | `4` | Parallel file transfers from the VFS cache. |
+| `checkers` | `8` | Parallel directory scans. |
+| `dirCacheTime` | `2m` | How long a directory listing is trusted. Lower = more accurate sync. |
+| `pollInterval` | `10s` | Backend polling interval (must be < `dirCacheTime`). |
+| `vfsCachePollInterval` | `5s` | How often the VFS layer re-checks files for changes. |
+| `attrTimeout` | `5s` | Kernel-side attribute cache TTL. Lower = more up-to-date sizes in the file manager. |
+| `noChecksum` | `true` | Skip MD5 on every transfer. Faster; TCP already protects against bit errors. |
+| `logFile` | `/var/log/rclone-ps4.log` | rclone log path. Empty string disables file logging. |
+
+To change, edit `mon/mehmangi/ayse/estandar.nix`:
 
 ```nix
 drevosim.servi.ftp-ps4 = {
@@ -111,6 +167,12 @@ drevosim.servi.ftp-ps4 = {
   host = "192.168.15.201";        # if the PS4's IP changes
   port = 2121;
   mountPoint = "/mnt/ps4";
+
+  # Performance overrides
+  bufferSize = "128Mi";
+  vfsReadAhead = "256Mi";
+  timeout = "60s";                # be more patient with a slow PS4
+  dirCacheTime = "30s";           # more accurate sync
 };
 ```
 
@@ -317,6 +379,8 @@ options in the rclone command line:
 | Flag | Value | Effect |
 |------|-------|--------|
 | `--vfs-cache-mode` | `full` | Buffers writes and caches reads in `/var/cache/rclone-ps4`. Smoothest experience, but writes are not flushed until the buffer is full or the file is closed. |
+| `--vfs-cache-max-size` | `1G` | Hard cap on the cache directory. Prevents a stalled upload from filling the 3.9 GB tmpfs root. |
+| `--vfs-cache-max-age` | `24h` | Cache entries older than this are evicted. |
 | `--vfs-cache-poll-interval` | `30s` | How often rclone polls the FTP server to see if its cached state is still valid. |
 | `--dir-cache-time` | `30m` | How long a directory listing is trusted before being re-fetched. |
 | `--poll-interval` | `30s` | Backend-level polling (FTP). |
@@ -346,6 +410,130 @@ reads of recently-listed directories. Then `sudo nixos-rebuild switch`.
 Change `--dir-cache-time=30m` to `--dir-cache-time=1m` (or `30s`). This
 makes the mount more "live" but increases the number of FTP `LIST`
 commands per minute.
+
+---
+
+## Stability and speed tuning
+
+The defaults are tuned for the PS4 over a typical LAN. If you see frequent
+disconnects, "stale" listings, or slow large-file copies, this section
+explains what each knob does and how to trade off.
+
+### Why the PS4 is flaky in the first place
+
+The PS4's homebrew FTP server (GoldHEN et al.) is a minimal implementation
+that was never meant to be hammered by a long-lived FUSE mount. Three
+specific things go wrong:
+
+1. **EPSV produces broken data-port allocations.** rclone defaults to
+   Extended Passive Mode; the PS4's EPSV response is often unusable
+   (the IP/port the server returns is wrong or the data port is
+   firewalled). Plain `PASV` works reliably.
+2. **MLSD responses are truncated or malformed.** rclone's default FTP
+   listing is MLSD (RFC 3659), which the PS4 claims to support but
+   implements inconsistently. Plain `LIST` is universal and faster here.
+3. **A single PS4 FTP session can only do one thing at a time.** Opening
+   multiple data connections concurrently corrupts the listings.
+   `concurrency = 1` is mandatory.
+
+The module forces all three defaults (`disableEpsv`, `disableMlsd`,
+`ftpConcurrency = 1`) and you should not change them unless you know
+the PS4 has been updated.
+
+### Tuning for accurate sync
+
+If you want changes on the PS4 to show up in your file manager
+within a few seconds:
+
+```nix
+drevosim.servi.ftp-ps4 = {
+  dirCacheTime = "30s";          # re-list directories every 30s
+  vfsCachePollInterval = "2s";   # re-check file contents every 2s
+  attrTimeout = "2s";            # file manager refreshes size/mtime every 2s
+  pollInterval = "5s";           # backend polling
+};
+```
+
+Trade-off: every 2–5 seconds rclone issues FTP `STAT` or `LIST`
+commands, so very large directories (>1000 entries) will generate a
+steady background load. For the PS4's top-level directories this is
+fine.
+
+### Tuning for large-file throughput
+
+If you copy multi-gigabyte `.pkg` files and they feel slow:
+
+```nix
+drevosim.servi.ftp-ps4 = {
+  bufferSize = "128Mi";          # in-memory read buffer per open file
+  vfsReadAhead = "256Mi";        # disk-buffered read-ahead
+  transfers = 4;                 # parallel uploads from the VFS cache
+  noChecksum = true;             # skip MD5 (LAN is already TCP-checksummed)
+  timeout = "60s";               # be patient with the PS4's slow CPU
+  lowLevelRetries = 30;          # don't give up on transient hiccups
+};
+```
+
+Trade-off: `bufferSize × open files` is held in RAM. 128 MiB × 4
+open files = 512 MiB of resident memory, which is fine on a typical
+desktop. `vfsReadAhead` lives on the VFS cache disk (1 GB cap).
+
+### Tuning for a flaky network
+
+If the mount disconnects and reconnects frequently:
+
+```nix
+drevosim.servi.ftp-ps4 = {
+  timeout = "60s";
+  contimeout = "60s";
+  lowLevelRetries = 50;          # very forgiving
+  dirCacheTime = "5m";           # reduce background LIST traffic
+  vfsCachePollInterval = "30s";
+};
+```
+
+Combined with the `ExecStartPre` self-healing in the service unit,
+this lets rclone ride out long PS4 stalls without taking the whole
+mount down.
+
+### Reading the log
+
+If something goes wrong, the log file is the first place to look:
+
+```bash
+tail -f /var/log/rclone-ps4.log
+journalctl -u rclone-ps4 -f
+```
+
+rclone logs every FTP command at `INFO` level. To see the raw FTP
+session for debugging, set `logFile` to a path and temporarily add
+`--log-level=DEBUG` by editing the wrapper in
+`mon/sifa/servi/ftp/ps4.nix` (the option is not exposed because the
+log becomes very verbose).
+
+The log is ephemeral (lives on the tmpfs root) and disappears on
+reboot. journald's own record of the service is persistent for the
+current boot session.
+
+### Bench: copy a large file
+
+To see what your current tuning actually does:
+
+```bash
+# Make a 500 MiB test file
+dd if=/dev/urandom of=/tmp/bigfile.bin bs=1M count=500 status=none
+
+# Time the copy (writes to the VFS cache, uploads in background)
+time cp /tmp/bigfile.bin /mnt/ps4/data/
+
+# Watch the rclone log to see the actual upload speed
+tail -f /var/log/rclone-ps4.log
+```
+
+A healthy connection over gigabit Ethernet to a wired PS4 should
+see 40–80 MB/s. Wi-Fi is usually 10–25 MB/s. If you see
+substantially less, try increasing `bufferSize` and `vfsReadAhead`
+and re-test.
 
 ---
 
@@ -518,7 +706,15 @@ rm /mnt/ps4/data/old-game.pkg
 
 # Browse
 ls /mnt/ps4
+
+# Speed test
+dd if=/dev/urandom of=/tmp/bigfile.bin bs=1M count=500 status=none
+time cp /tmp/bigfile.bin /mnt/ps4/data/
+
+# Watch live transfer
+tail -f /var/log/rclone-ps4.log
 ```
 
-If something doesn't work, check `journalctl -u rclone-ps4 -n 50` first —
-99% of problems are visible there.
+If something doesn't work, check `journalctl -u rclone-ps4 -n 50` and
+`tail -f /var/log/rclone-ps4.log` first — most problems are visible
+in one of them.
