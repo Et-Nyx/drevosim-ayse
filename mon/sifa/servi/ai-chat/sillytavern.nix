@@ -252,7 +252,7 @@ in
 
       llmRelayKeyFile = lib.mkOption {
         type = lib.types.nullOr lib.types.path;
-        default = null;
+        default = config.age.secrets.ayse-go-relay.path or null;
         description = ''
           Path to a file containing the relay access token.
           If set, SillyTavern's Custom chat provider is seeded with this key
@@ -263,7 +263,7 @@ in
 
       llmDefaultModel = lib.mkOption {
         type = lib.types.str;
-        default = "gpt-4o";
+        default = "minimax-m3";
         description = "Fallback model name seeded before SillyTavern connects to the relay.";
       };
 

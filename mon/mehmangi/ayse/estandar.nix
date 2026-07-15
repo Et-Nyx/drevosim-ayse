@@ -15,6 +15,9 @@ in
         imports =
           yongu.monlari (self.nixosModules.sifa or {}) ++
           yongu.monlari (self.nixosModules.ayse or {});
+
+        drevosim.servi.sillytavern.enable = true;
+        drevosim.servi.kokoro.enable = true;
       })
     ];
   };
