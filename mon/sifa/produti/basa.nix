@@ -29,6 +29,7 @@
 
     # Python
     python3
+    basedpyright
     ruff
 
     # Java
