@@ -67,13 +67,16 @@ The flake is organized in a dendritic (tree-like) structure inspired by [Drevosi
 │       │   └── faylu/     # raw config files (filtered from import-tree)
 │       │       └── fuzzel.ini
 │       ├── servi/         # system services
-│       │   ├── networkmanager.nix
+│       │   ├── network.nix
 │       │   ├── openssh.nix
 │       │   ├── mako.nix
 │       │   ├── polkit.nix
 │       │   ├── tul.nix
-│       │   ├── kokoro.nix # Kokoro TTS API server
-│       │   ├── sillytavern.nix # SillyTavern web UI + extensions
+│       │   ├── ai-chat/   # AI chat services
+│       │   │   ├── kokoro.nix        # Kokoro TTS API server + dashboard
+│       │   │   ├── sillytavern.nix   # SillyTavern web UI + extensions
+│       │   │   ├── dashboard.html    # Kokoro web dashboard UI
+│       │   │   └── dashboard_main.py # Kokoro dashboard middleware
 │       │   └── faylu/     # raw config files (filtered from import-tree)
 │       │       └── mako.ini
 │       ├── terminal/      # terminal emulators, shells & CLI tools
@@ -94,7 +97,8 @@ The flake is organized in a dendritic (tree-like) structure inspired by [Drevosi
 ├── siri/                  # encrypted secrets for agenix
 │   ├── secrets.nix        # recipient public keys
 │   ├── ayse-root-pasalexi.age
-│   └── ayse-eter-pasalexi.age
+│   ├── ayse-eter-pasalexi.age
+│   └── ayse-go-relay.age  # OpenCode Go relay access token
 └── yongu/                 # helper functions
     ├── monlari.nix        # recursive NixOS-module collector
     └── parseIni.nix       # pure-Nix INI parser for faylu/ files
@@ -168,7 +172,7 @@ sudo nixos-rebuild switch --flake .
 - `users.mutableUsers = false` so `/etc/shadow` always matches the NixOS configuration.
 - Stale Chromium lock files and KWallet data are cleaned on every boot.
 - Preserved home directories include `~/.config` (KDE Plasma + Chromium config), `~/.local/share` and `~/.local/state` (application data), `~/.ssh`, and the standard XDG user folders including `~/Games` (used by Heroic and Steam for large game installs that would otherwise fill the tmpfs root).
-- Preserved system state includes `/etc/ssh`, `/var/lib/bluetooth` (pairing keys), `/var/lib/NetworkManager/system-connections`, `/var/lib/nixos` (user/group database), `/var/lib/kokoro-tts` (TTS service state), and `/var/lib/SillyTavern` (SillyTavern data).
+- Preserved system state includes `/etc/ssh`, `/var/lib/bluetooth` (pairing keys), `/var/lib/NetworkManager/system-connections`, `/var/lib/nixos` (user/group database), `/var/lib/kokoro-tts` (TTS service state, including custom `.pt` voice packs uploaded through the dashboard), and `/var/lib/SillyTavern` (SillyTavern data).
 - Bluetooth is enabled (`hardware.bluetooth`) with `powerOnBoot = true` and `bluez` in `systemPackages`.
 
 ### NVIDIA (Optimus / PRIME)
@@ -187,7 +191,7 @@ An `igpu` specialisation is defined for fallback: it blacklists all nvidia kerne
 
 ### Kokoro TTS
 
-Configured in `mon/sifa/servi/kokoro.nix` and enabled for `ayse` in `mon/mehmangi/ayse/kokoro.nix`.
+Configured in `mon/sifa/servi/ai-chat/kokoro.nix` and enabled directly in the host assembler at `mon/mehmangi/ayse/estandar.nix` (`drevosim.servi.kokoro.enable = true`).
 
 #### What it is
 
@@ -204,7 +208,12 @@ A self-contained, offline [Kokoro-FastAPI](https://github.com/remsky/Kokoro-Fast
 | Runtime state | `/var/lib/kokoro-tts/` | Preserved on `/persistent`; mostly empty working directory |
 | Temp buffers | Private `/tmp` namespace | Cleaned automatically by the service |
 
-At boot the service loads the model into RAM (~1–2 GB), runs a warmup utterance with `af_heart`, and then serves requests. Each request tokenizes the text, loads the requested voice, runs inference, and streams the audio back. **No generated audio is stored on disk.**
+At boot the service loads the model into RAM (~1–1.5 GB), runs a warmup utterance with `af_heart`, and then serves requests. Each request tokenizes the text, loads the requested voice, runs inference, and streams the audio back. **No generated audio is stored on disk.**
+
+> The actual service entry point is `api.src.dashboard_main:app` (see `mon/sifa/servi/ai-chat/dashboard_main.py`). It wraps the upstream FastAPI app with a native ASGI middleware that:
+> - copies the bundled voices into the writable `VOICES_DIR` on first run,
+> - records the last 100 `/v1/*` requests (caller, payload, status, duration) for the dashboard,
+> - exposes `/v1`, `/v1/` 307 redirects to the right endpoints so clients that forget the `/audio/speech` suffix still work.
 
 #### Configuration
 
@@ -241,6 +250,17 @@ curl http://127.0.0.1:8880/v1/audio/speech \
 ```
 
 `response_format` supports the standard OpenAI values: `mp3`, `wav`, `opus`, `aac`, `flac`.
+
+#### Web dashboard
+
+A web UI is bundled into the service and served by the same uvicorn instance at `http://<ayse-ip>:8880/dashboard`. It provides:
+
+- **Speech playground** — type text, pick a voice and format, play/clipboard the result.
+- **Voice manager** — list bundled voices, upload new `.pt` voice packs to `VOICES_DIR`, delete custom voices.
+- **System status** — live CPU/RAM/VRAM metrics, count of in-flight `/v1/*` requests.
+- **API call log** — last 100 `/v1/*` requests with caller identification (SillyTavern, browser, curl, Python), payload preview, status code, duration.
+
+The dashboard is read/write: uploading voices writes to `/var/lib/kokoro-tts/voices` (preserved on `/persistent`), so custom voices survive reboots.
 
 #### Voices
 
@@ -302,6 +322,7 @@ curl http://127.0.0.1:8880/v1/audio/speech \
 
 #### Client configuration
 
+- **Web dashboard**: `http://<ayse-ip>:8880/dashboard` — built-in playground, voice manager, and API call inspector.
 - **SillyTavern** (already configured): `Extensions → TTS → OpenAI`, URL `http://127.0.0.1:8880/v1`, voice `af_heart`.
 - **Open WebUI**: set TTS engine to OpenAI-compatible, URL `http://<ayse-ip>:8880/v1`, API key any dummy value, pick a voice.
 - **Any OpenAI TTS client**: point it at `http://<ayse-ip>:8880/v1` and use a voice ID from `/v1/audio/voices`.
@@ -312,15 +333,16 @@ curl http://127.0.0.1:8880/v1/audio/speech \
 
 ### SillyTavern
 
-Configured in `mon/sifa/servi/sillytavern.nix` and enabled for `ayse` in `mon/mehmangi/ayse/sillytavern.nix`:
+Configured in `mon/sifa/servi/ai-chat/sillytavern.nix` and enabled directly in the host assembler at `mon/mehmangi/ayse/estandar.nix` (`drevosim.servi.sillytavern.enable = true`).
 
 - [SillyTavern](https://sillytavern.app/) web UI on `http://0.0.0.0:8000`.
-- Whitelist allows localhost, IPv6 localhost, and the Tailscale CGNAT range (`100.64.0.0/10`).
+- Whitelist allows localhost, IPv6 localhost, and the Tailscale CGNAT range (`100.64.0.0/10`). Whitelist mode is configured by seeding `config.local.yaml` (the upstream yargs parser mis-handles `--listen=1`, so CLI flags are avoided).
 - State (`/var/lib/SillyTavern`) preserved on `/persistent`.
 - TTS pre-configured to use the local Kokoro service (`http://127.0.0.1:8880/v1`) with the `af_heart` voice.
-- Chat backend pre-configured to use the OpenCode Go relay via Cloudflare Worker; the relay access token is stored in `siri/ayse-go-relay.age` and decrypted by agenix.
-- Curated third-party extensions bundled declaratively (CharacterLibrary, TopInfoBar, QuickPersona, PromptInspector, TypingIndicator, Notebook, Objective, Ultimate-ChatAssistant).
+- Chat backend pre-configured to use the OpenCode Go relay via Cloudflare Worker; the relay access token is stored in `siri/ayse-go-relay.age` and decrypted by agenix, and the fallback model is `minimax-m3`.
+- Curated third-party extensions bundled declaratively from flake inputs (CharacterLibrary, TopInfoBar, QuickPersona, PromptInspector, TypingIndicator, Notebook, Objective, Ultimate-ChatAssistant).
 - CharacterLibrary's `cl-helper` server plugin enabled; FlareSolverr is started automatically for Cloudflare bypass.
+- All requests that hit the bundled Kokoro API show up in the Kokoro dashboard's API call log (the dashboard identifies the caller as "SillyTavern" via the `User-Agent`).
 
 ### Gaming
 
