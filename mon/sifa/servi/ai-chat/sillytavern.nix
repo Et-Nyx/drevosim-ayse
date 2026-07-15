@@ -1,7 +1,5 @@
 { inputs, ... }:
 let
-  lib = inputs.nixpkgs.lib;
-
   # CharacterLibrary's extension settings key in settings.json.
   charLibSettingsKey = "SillyTavernCharacterGallery";
 in
@@ -130,10 +128,10 @@ in
            | .tts."OpenAI Compatible".provider_endpoint = $ttsUrl
            | .tts."OpenAI Compatible".model = "kokoro"
            | .tts."OpenAI Compatible".available_voices = [
-               "af_heart", "af_alloy", "af_aoede", "af_bella", "af_jadzia", 
-               "af_jessica", "af_kore", "af_nicole", "af_nova", "af_river", 
-               "af_sarah", "af_sky", "am_adam", "am_echo", "am_eric", 
-               "am_fenrir", "am_liam", "am_michael", "am_onyx", "am_puck", 
+               "af_heart", "af_alloy", "af_aoede", "af_bella", "af_jadzia",
+               "af_jessica", "af_kore", "af_nicole", "af_nova", "af_river",
+               "af_sarah", "af_sky", "am_adam", "am_echo", "am_eric",
+               "am_fenrir", "am_liam", "am_michael", "am_onyx", "am_puck",
                "bf_emma", "bf_isabella", "bm_daniel", "bm_george"
              ]
            | .tts."OpenAI Compatible".voiceMap = (.tts."OpenAI Compatible".voiceMap // {
@@ -169,10 +167,10 @@ in
                  provider_endpoint: $ttsUrl,
                  model: "kokoro",
                  available_voices: [
-                   "af_heart", "af_alloy", "af_aoede", "af_bella", "af_jadzia", 
-                   "af_jessica", "af_kore", "af_nicole", "af_nova", "af_river", 
-                   "af_sarah", "af_sky", "am_adam", "am_echo", "am_eric", 
-                   "am_fenrir", "am_liam", "am_michael", "am_onyx", "am_puck", 
+                   "af_heart", "af_alloy", "af_aoede", "af_bella", "af_jadzia",
+                   "af_jessica", "af_kore", "af_nicole", "af_nova", "af_river",
+                   "af_sarah", "af_sky", "am_adam", "am_echo", "am_eric",
+                   "am_fenrir", "am_liam", "am_michael", "am_onyx", "am_puck",
                    "bf_emma", "bf_isabella", "bm_daniel", "bm_george"
                  ],
                  voiceMap: {
