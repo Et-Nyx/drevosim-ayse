@@ -1,12 +1,12 @@
 { ... }:
 {
-  flake.nixosModules.sifa.servi.ftp =
+  flake.nixosModules.sifa.servi.ftp-ayse =
   { config, lib, ... }:
   let
-    cfg = config.drevosim.servi.ftp;
+    cfg = config.drevosim.servi.ftp-ayse;
   in
   {
-    options.drevosim.servi.ftp = {
+    options.drevosim.servi.ftp-ayse = {
       enable = lib.mkEnableOption "anonymous FTP server" // {
         default = false;
       };
@@ -73,11 +73,17 @@
         '';
       };
 
-      # The upstream vsftpd module creates the anonymous root with mode 0555.
-      # We need a writable 'upload' subdirectory and the root must be traversable.
-      # These rules are appended after the upstream ones so they win.
+      # The upstream vsftpd module creates the anonymous root with mode 0555
+      # owned by ftp:ftp. The preservation module then widens the root to
+      # 0755 root:ftp so the anonymous user can traverse it. We only need to
+      # ensure the writable 'upload' subdirectory exists with the right
+      # ownership. The rule below runs after both upstream and preservation
+      # rules.
+      #
+      # Note: a 'Z' (recursive) rule on the parent would force the upload
+      # subdirectory to root:ftp, which would break anonymous writes, so
+      # we use 'd' (single directory) here.
       systemd.tmpfiles.rules = lib.mkAfter [
-        "Z ${cfg.stateDir} 0755 root ftp - -"
         "d ${cfg.stateDir}/upload 0755 ftp ftp - -"
       ];
 

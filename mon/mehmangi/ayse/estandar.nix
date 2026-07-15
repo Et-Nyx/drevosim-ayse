@@ -18,7 +18,8 @@ in
 
         drevosim.servi.sillytavern.enable = true;
         drevosim.servi.kokoro.enable = true;
-        drevosim.servi.ftp.enable = true;
+        drevosim.servi.ftp-ayse.enable = true;
+        drevosim.servi.ftp-ps4.enable = true;
       })
     ];
   };
