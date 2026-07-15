@@ -72,12 +72,13 @@ The flake is organized in a dendritic (tree-like) structure inspired by [Drevosi
 │       │   ├── mako.nix
 │       │   ├── polkit.nix
 │       │   ├── tul.nix
-│       │   ├── ai-chat/   # AI chat services
-│       │   │   ├── kokoro.nix        # Kokoro TTS API server + dashboard
-│       │   │   ├── sillytavern.nix   # SillyTavern web UI + extensions
-│       │   │   ├── dashboard.html    # Kokoro web dashboard UI
-│       │   │   └── dashboard_main.py # Kokoro dashboard middleware
-│       │   └── faylu/     # raw config files (filtered from import-tree)
+        │   │   ├── ai-chat/   # AI chat services
+        │   │   │   ├── kokoro.nix        # Kokoro TTS API server + dashboard
+        │   │   │   ├── sillytavern.nix   # SillyTavern web UI + extensions
+        │   │   │   ├── dashboard.html    # Kokoro web dashboard UI
+        │   │   │   └── dashboard_main.py # Kokoro dashboard middleware
+        │   │   ├── ftp.nix            # anonymous FTP server (vsftpd)
+        │   │   └── faylu/     # raw config files (filtered from import-tree)
 │       │       └── mako.ini
 │       ├── terminal/      # terminal emulators, shells & CLI tools
 │       │   ├── foot.nix
@@ -172,7 +173,7 @@ sudo nixos-rebuild switch --flake .
 - `users.mutableUsers = false` so `/etc/shadow` always matches the NixOS configuration.
 - Stale Chromium lock files and KWallet data are cleaned on every boot.
 - Preserved home directories include `~/.config` (KDE Plasma + Chromium config), `~/.local/share` and `~/.local/state` (application data), `~/.ssh`, and the standard XDG user folders including `~/Games` (used by Heroic and Steam for large game installs that would otherwise fill the tmpfs root).
-- Preserved system state includes `/etc/ssh`, `/var/lib/bluetooth` (pairing keys), `/var/lib/NetworkManager/system-connections`, `/var/lib/nixos` (user/group database), `/var/lib/kokoro-tts` (TTS service state, including custom `.pt` voice packs uploaded through the dashboard), and `/var/lib/SillyTavern` (SillyTavern data).
+- Preserved system state includes `/etc/ssh`, `/var/lib/bluetooth` (pairing keys), `/var/lib/NetworkManager/system-connections`, `/var/lib/nixos` (user/group database), `/var/lib/kokoro-tts` (TTS service state, including custom `.pt` voice packs uploaded through the dashboard), `/var/lib/SillyTavern` (SillyTavern data), and `/var/lib/ftp-srv` (anonymous FTP root, including the writable `upload/` subdirectory).
 - Bluetooth is enabled (`hardware.bluetooth`) with `powerOnBoot = true` and `bluez` in `systemPackages`.
 
 ### NVIDIA (Optimus / PRIME)
@@ -344,6 +345,59 @@ Configured in `mon/sifa/servi/ai-chat/sillytavern.nix` and enabled directly in t
 - CharacterLibrary's `cl-helper` server plugin enabled; FlareSolverr is started automatically for Cloudflare bypass.
 - All requests that hit the bundled Kokoro API show up in the Kokoro dashboard's API call log (the dashboard identifies the caller as "SillyTavern" via the `User-Agent`).
 
+### FTP
+
+Configured in `mon/sifa/servi/ftp.nix` and enabled directly in the host assembler at `mon/mehmangi/ayse/estandar.nix` (`drevosim.servi.ftp.enable = true`).
+
+A read-write [vsftpd](https://security.appspot.com/vsftpd.html) server that exposes `/var/lib/ftp-srv` over plain FTP with **no authentication**. It exists primarily so consoles and other homebrew FTP clients (PlayStation, Xbox, etc.) can browse the host's internal storage without passwords or TLS, but it is general purpose and works with any anonymous-FTP client.
+
+#### Configuration
+
+- **Server**: `vsftpd` v3.x.
+- **Anonymous user**: enabled, passwordless (`local_enable = false`, no `pam_service_name`).
+- **Bind / control port**: `0.0.0.0:21`.
+- **Passive ports**: `30000–30100/tcp` (for data connections on a typical NAT).
+- **Filesystem layout** (created on first activation by `systemd.tmpfiles`):
+
+  | Path | Owner | Mode | Purpose |
+  |------|-------|------|---------|
+  | `/var/lib/ftp-srv` | `root:ftp` | `0755` | Anonymous root, read-only at the server level |
+  | `/var/lib/ftp-srv/upload` | `ftp:ftp` | `0755` | Writable drop box for uploads |
+
+  vsftpd refuses to run with a writable anonymous root, so the entire tree is read-only and the only writable spot is the `upload/` subdirectory. Uploads land there and are never auto-cleaned.
+- **State and persistence**: `/var/lib/ftp-srv` is preserved on `/persistent` so the FTP root and any uploaded files survive reboots.
+- **Firewall**: control port `21/tcp` and the passive range `30000–30100/tcp` are opened when the service is enabled.
+- **Tailscale**: not required. The service binds to `0.0.0.0`, so it is reachable over LAN and over Tailscale once Tailscale is added (no extra config needed; the Tailscale CGNAT range `100.64.0.0/10` is just normal traffic to the firewall).
+- **No TLS**: TLS is intentionally disabled for maximum compatibility with console homebrew clients. **Do not expose this service to the public internet.**
+
+#### Usage
+
+Any anonymous-FTP client can connect:
+
+```bash
+# Browse the root
+ftp ftp://ayse.local
+# Or from a Tailscale peer:
+ftp ftp://100.x.y.z
+# Username: anonymous   (or any string)
+# Password: <blank, or anything ending in "@">
+```
+
+```bash
+# Upload a file with curl
+curl -T ./myfile.zip ftp://ayse.local/upload/
+
+# List the writable drop box
+curl ftp://ayse.local/upload/
+```
+
+```bash
+# Download a file
+curl -o myfile.zip ftp://ayse.local/some/path/myfile.zip
+```
+
+Files written into `upload/` are owned by the `ftp` system user and have default umask `022`, so they are world-readable. Move or chmod them before sharing further.
+
 ### Gaming
 
 Configured in `mon/sifa/yuxi/`:
@@ -361,3 +415,4 @@ Game data is installed under the preserved `~/Games` directory to avoid filling 
 - [ ] Move KDE Plasma configuration from preserved `~/.config` into Nix modules.
 - [ ] Decide what else from `/home` should be preserved under `/mnt/data` or via `preservation.nix`.
 - [ ] Consider switching from `legacy_580` to the open kernel modules once the hardware supports it (currently blocked by Pascal).
+- [ ] The FTP service is plain (no TLS) and unauthenticated; keep it on the LAN/Tailscale only and do not port-forward it.
