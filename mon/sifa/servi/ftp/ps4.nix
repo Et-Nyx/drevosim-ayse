@@ -345,12 +345,17 @@
         # is on the @cache btrfs subvolume; if the service starts
         # before the mount is ready, rclone creates the directory on
         # the tmpfs root (which then fills up, as we discovered).
+        #
+        # Note: the mount unit is named "mnt-ssd-cache.mount" with a
+        # LITERAL dash. The \x2d escape is only for the directive value
+        # syntax, not the unit name on disk. The actual generator file
+        # at /run/systemd/generator/mnt-ssd-cache.mount confirms this.
         after = [
           "network-online.target"
-          "mnt-ssd\\x2dcache.mount"
+          "mnt-ssd-cache.mount"
         ];
         wants = [ "network-online.target" ];
-        requires = [ "mnt-ssd\\x2dcache.mount" ];
+        requires = [ "mnt-ssd-cache.mount" ];
         wantedBy = [ "multi-user.target" ];
         serviceConfig = {
           Type = "simple";

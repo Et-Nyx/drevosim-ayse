@@ -29,7 +29,8 @@ See [`gida/preservation.md`](gida/preservation.md) for the full rules and what i
 │   ├── kokoro.md
 │   ├── sillytavern.md
 │   ├── nvidia.md
-│   └── preservation.md
+│   ├── preservation.md
+│   └── ssd-cache.md      # /mnt/ssd/cache SSD subvolume pattern
 ├── mon/                   # module tree (imported recursively by import-tree)
 │   ├── parts.nix          # flake-parts systems configuration
 │   ├── basi.nix           # shared base options (userName, nix settings, GC, unfree)
@@ -42,7 +43,7 @@ See [`gida/preservation.md`](gida/preservation.md) for the full rules and what i
 │   │           ├── estrutur.nix   # hostname & host-specific structure
 │   │           ├── hardwer.nix    # hardware/kernel configuration
 │   │           ├── xoru.nix       # bootloader configuration
-│   │           ├── disko.nix      # disk partitioning & filesystem layout
+│   │           ├── disko.nix      # disk partitioning & filesystem layout (incl. @cache SSD subvolume → /mnt/ssd/cache)
 │   │           ├── nvidia.nix     # NVIDIA PRIME offload & iGPU specialisation
 │   │           ├── preservation.nix # preservation rules for the ephemeral root
 │   │           └── siri.nix       # agenix secret declarations
@@ -262,6 +263,7 @@ service management, security and limits, and a quick reference.
 | [`gida/sillytavern.md`](gida/sillytavern.md) | `mon/sifa/servi/ai-chat/sillytavern.nix` |
 | [`gida/nvidia.md`](gida/nvidia.md) | `mon/mehmangi/ayse/nukleus/nvidia.nix` |
 | [`gida/preservation.md`](gida/preservation.md) | `mon/mehmangi/ayse/nukleus/preservation.nix` |
+| [`gida/ssd-cache.md`](gida/ssd-cache.md) | `mon/mehmangi/ayse/nukleus/disko.nix` (the `@cache` subvolume) |
 
 ## Todo / Hardening Notes
 
@@ -271,3 +273,8 @@ service management, security and limits, and a quick reference.
 - [ ] Decide what else from `/home` should be preserved under `/mnt/data` or via `preservation.nix`.
 - [ ] Consider switching from `legacy_580` to the open kernel modules once the hardware supports it (currently blocked by Pascal).
 - [ ] The anonymous FTP server is plain (no TLS) and unauthenticated; keep it on the LAN/Tailscale only and do not port-forward it. Same for the PS4 FTP mount — it is plain FTP.
+- [ ] **Move Firefox profile + cache to `/mnt/ssd/cache/firefox/`** — the ephemeral `~/.cache` is wiped on every boot (cold cache, slow first-page-load) and the profile rides the slow HDD via `preservation.nix`'s `~/.config` rule. Both move to the new SSD subvolume for speed and persistence. Module: `mon/sifa/programa/firefox.nix`. Migration: copy existing profile from `/persistent/home/eter/.config/mozilla/` to `/mnt/ssd/cache/firefox/profile/` before the first rebuild.
+- [x] **Write `gida/ssd-cache.md`** — done. Documents the `/mnt/ssd/cache` SSD subvolume pattern (introduced in `disko.nix`) and lists which services consume it. Notes the difference from `/persistent` (HDD) and the 4 GB tmpfs root.
+- [ ] **Audit other `~/.cache` consumers for SSD migration**: `~/.cache/nix` (~70 MB, nix store cache, wiped on every boot), `~/.cache/mesa_shader_cache` (~2.5 MB), `~/.cache/opencode` (~3 MB). Same fix applies but needs `nix-maid` or a module that overrides `XDG_CACHE_HOME` / `NIX_CACHE_HOME`. Different scope from a per-service fix.
+- [ ] **Move Steam / Heroic game data to a dedicated SSD path** (e.g. `/mnt/ssd/games` or a subdir of `/mnt/ssd/cache/`). Currently installs to the preserved `~/Games` on the HDD; the SSD has 180+ GB free and game load times would improve dramatically. Requires declaring a new subvolume in `disko.nix` and pointing `programs.steam` at it. Larger scope.
+- [ ] **PS4 FTP** — news pending, see user notes.

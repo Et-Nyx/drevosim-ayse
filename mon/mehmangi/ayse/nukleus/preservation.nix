@@ -49,6 +49,10 @@
             # narrowed to specific paths as dotfiles move into Nix.
             ".config"
 
+            # Antigravity CLI — sessions, settings, conversation history,
+            # and brain/artifacts. Lives at ~/.gemini/antigravity-cli/.
+            ".gemini"
+
             # Transitional: broad application data.
             # Includes KWallet data and Plasma state. Will be narrowed later.
             ".local/share"

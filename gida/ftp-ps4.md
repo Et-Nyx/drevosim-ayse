@@ -95,13 +95,24 @@ The service is therefore self-healing:
 Both use the absolute path from the `fuse3` package (`/nix/store/…/bin/fusermount3`),
 not `/bin/fusermount3`, which does not exist on NixOS.
 
-### VFS cache size cap
+### VFS cache location and size cap
 
-rclone's VFS cache is held at `/var/cache/rclone-ps4/`, which lives on the
-3.9 GB tmpfs root. Without a size cap, an upload to an unreachable PS4 will
-fill the root and take down rclone. The mount is invoked with
-`--vfs-cache-max-size=1G` and `--vfs-cache-max-age=24h`, so the cache can
-never grow beyond 1 GB and entries expire after a day.
+rclone's VFS cache lives at **`/mnt/ssd/cache/rclone-ps4/`**, on the
+`@cache` btrfs subvolume of the NVMe SSD (see
+[`gida/ssd-cache.md`](ssd-cache.md)). It is mounted by disko at boot, and
+the rclone service is wired to wait for the mount via `requires =
+[ "mnt-ssd-cache.mount" ]` and `after = [ "mnt-ssd-cache.mount" ]`.
+
+The previous location (`/var/cache/rclone-ps4/` on the 3.9 GB tmpfs root)
+caused "no space left on device" failures when moving large `.pkg` files
+because the 1 GB VFS cache cap is a *target*, not a hard limit, and
+the active transfer exceeds it. Moving the cache to the SSD subvolume
+gives us ~180 GB of fast scratch space and the cache cap can be raised
+to `10G` (set via the `vfsCacheMaxSize` option).
+
+The mount is invoked with `--vfs-cache-max-size=10G` (default) and
+`--vfs-cache-max-age=24h`, so the cache can never grow beyond 10 GB
+and entries expire after a day.
 
 ### Why a password at all
 
@@ -378,7 +389,7 @@ options in the rclone command line:
 
 | Flag | Value | Effect |
 |------|-------|--------|
-| `--vfs-cache-mode` | `full` | Buffers writes and caches reads in `/var/cache/rclone-ps4`. Smoothest experience, but writes are not flushed until the buffer is full or the file is closed. |
+| `--vfs-cache-mode` | `writes` | Buffers writes in `/mnt/ssd/cache/rclone-ps4/` until uploaded, but does NOT prefetch reads. `full` mode would prefill the cache with browsed files (slow on LAN); `writes` is the right default for the PS4. |
 | `--vfs-cache-max-size` | `1G` | Hard cap on the cache directory. Prevents a stalled upload from filling the 3.9 GB tmpfs root. |
 | `--vfs-cache-max-age` | `24h` | Cache entries older than this are evicted. |
 | `--vfs-cache-poll-interval` | `30s` | How often rclone polls the FTP server to see if its cached state is still valid. |
@@ -476,7 +487,8 @@ drevosim.servi.ftp-ps4 = {
 
 Trade-off: `bufferSize × open files` is held in RAM. 128 MiB × 4
 open files = 512 MiB of resident memory, which is fine on a typical
-desktop. `vfsReadAhead` lives on the VFS cache disk (1 GB cap).
+desktop. `vfsReadAhead` lives on the VFS cache disk on the SSD
+subvolume (10 GB cap by default).
 
 ### Tuning for a flaky network
 
@@ -644,8 +656,8 @@ sudo fusermount3 -u /mnt/ps4 2>/dev/null
 sudo RCLONE_FTP_PASS='<obscured-from-config>' \
   rclone mount \
     --config=/etc/rclone-ps4.conf \
-    --cache-dir=/var/cache/rclone-ps4 \
-    --vfs-cache-mode=full \
+    --cache-dir=/mnt/ssd/cache/rclone-ps4 \
+    --vfs-cache-mode=writes \
     --allow-other \
     ps4-ftp: /mnt/ps4
 ```
