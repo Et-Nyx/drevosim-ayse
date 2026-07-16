@@ -97,11 +97,9 @@ services.udev.extraRules = ''
 '';
 
 environment.sessionVariables = {
-  __NV_PRIME_RENDER_OFFLOAD = "1";
-  __NV_PRIME_RENDER_OFFLOAD_PROVIDER = "NVIDIA-G0";
-  __GLX_VENDOR_LIBRARY_NAME = "nvidia";
-  __VK_LAYER_NV_optimus = "NVIDIA_only";
+  XKB_DEFAULT_LAYOUT = "us,br"; # example, or whatever is there
 };
+# (Global PRIME env vars removed; default is iGPU)
 
 systemd.services.nvidia-persistenced = {
   wantedBy = [ "multi-user.target" ];
@@ -126,20 +124,20 @@ discrete GPU available on-demand while the iGPU drives the display.
 │  Intel UHD │                   │  MX150     │
 │  630       │                   │  (Pascal)  │
 └────────────┘                   └────────────┘
-       ▲                                 ▲
-       │                                 │
-  prime-run glxgears         __NV_PRIME_RENDER_OFFLOAD=1
-  (explicit opt-in)          (global opt-in via env vars)
+       ▲
+       │
+  prime-run glxgears
+  (explicit opt-in via prime-run)
 ```
 
 - **Reverse PRIME** lets the dGPU render into the iGPU's
   framebuffer, which is what makes "use the dGPU" work on a laptop
   where only the iGPU has a display wired to it.
 - **PRIME offload** lets a single process render with the dGPU and
-  present via the iGPU. You opt in by either:
-  - launching with `prime-run` (the explicit form), or
-  - having `__NV_PRIME_RENDER_OFFLOAD=1` in the environment (the
-    global form, which the module sets).
+  present via the iGPU. On this host, you opt in explicitly by launching
+  applications with the `prime-run` wrapper (e.g. `prime-run steam`).
+  By default, all desktop processes and everyday apps like Firefox
+  run on the cooler, more responsive Intel iGPU.
 - `nvidiaPersistenced = true` keeps VRAM warm so launches are fast.
 - `nvidia-drm.modeset=1` is required for Wayland.
 
@@ -179,46 +177,9 @@ The udev rule above is the standard workaround.
 
 ---
 
-## The `igpu` fallback specialisation
+## iGPU Fallback
 
-A `specialisation.igpu.configuration` block defines a parallel
-configuration that boots without the nvidia driver. This is your
-escape hatch if the dGPU fails to wake or the nvidia module
-mysteriously breaks.
-
-### What `igpu` does
-
-- `boot.kernelParams = lib.mkAfter [ "nvidia-drm.modeset=0" ]` —
-  disables nvidia kernel modesetting.
-- `services.xserver.videoDrivers = lib.mkForce [ "modesetting" ]` —
-  uses the kernel modesetting driver for Intel.
-- `hardware.nvidia.modesetting.enable = lib.mkForce false` — turns
-  off nvidia modesetting.
-- `boot.blacklistedKernelModules = [ "nvidia" "nvidia_drm"
-  "nvidia_modeset" "nvidia_uvm" "nvidia_peermem" ]` — prevents the
-  nvidia modules from loading at all. This is critical: without it,
-  the initrd tries to probe the dGPU and hangs.
-- `environment.sessionVariables = { __NV_PRIME_RENDER_OFFLOAD =
-  lib.mkForce null; ... }` — clears the PRIME offload env vars.
-- `system.nixos.tags = [ "igpu" ]` — marks the specialisation in
-  the boot menu.
-
-### How to boot into `igpu`
-
-From systemd-boot (hold `Space` during boot to see the menu), pick
-the `igpu` specialisation. The menu shows both `nixos` and `nixos
-(igpu)` entries.
-
-### When to use it
-
-- The dGPU is stuck in D3 and won't wake (rare, but the firmware is
-  buggy).
-- A new kernel or driver update broke the nvidia module.
-- You want to verify the system works without the dGPU (e.g.
-  travelling and need to save battery).
-- A regression makes the desktop unusable with the dGPU active.
-
-The iGPU is enough for everything except games and CUDA work.
+Because we no longer force the dGPU globally, the desktop environment and all normal applications run natively on the Intel integrated GPU (iGPU). If the dGPU fails to wake or is not probed, the system boots and operates normally without issue, rendering the previous `igpu` specialisation redundant. It has been removed.
 
 ---
 
@@ -296,31 +257,14 @@ The `prime-run` wrapper is at
 `/run/current-system/sw/bin/prime-run` (because
 `offload.enableOffloadCmd = true`).
 
-### Globally: the env vars
+### Default Rendering on iGPU
 
-The module sets these in `environment.sessionVariables`:
+Since we do not set these variables globally, apps default to running on the cooler and more power-efficient Intel iGPU. This avoids copy-overhead stuttering and saves battery.
 
-```sh
-__NV_PRIME_RENDER_OFFLOAD=1
-__NV_PRIME_RENDER_OFFLOAD_PROVIDER=NVIDIA-G0
-__GLX_VENDOR_LIBRARY_NAME=nvidia
-__VK_LAYER_NV_optimus=NVIDIA_only
-```
-
-So apps launched from the desktop session use the dGPU by default.
-To opt out (use the iGPU for one app):
-
+To run an app on the dGPU, prepend it with the `prime-run` command:
 ```bash
-env -u __NV_PRIME_RENDER_OFFLOAD -u __NV_PRIME_RENDER_OFFLOAD_PROVIDER \
-    -u __GLX_VENDOR_LIBRARY_NAME -u __VK_LAYER_NV_optimus \
-    glxgears
-```
-
-Or for a one-liner:
-
-```bash
-prime-run glxgears   # explicit dGPU
-glxgears              # iGPU (env vars unset)
+prime-run glxgears   # dGPU
+glxgears             # iGPU (default)
 ```
 
 ---
@@ -390,9 +334,7 @@ Check the env vars are set:
 echo $__NV_PRIME_RENDER_OFFLOAD
 ```
 
-If empty, the session didn't inherit the sessionVariables. This
-usually means the desktop session was started before the
-environment was set (rare). Reboot.
+Since the PRIME offload environment variables are not set globally, this check is only relevant for shells launched with `prime-run`.
 
 ### Vulkan doesn't work
 
@@ -418,7 +360,7 @@ cat /proc/driver/nvidia/params | grep -i power
 ```
 
 If `NVreg_OpenRmEnableUnsupportedGpus` or similar show the dGPU is
-active, use the `igpu` specialisation to force iGPU-only.
+active, check which processes are running on the dGPU using `nvidia-smi`.
 
 ---
 
@@ -428,8 +370,7 @@ If a kernel or driver update breaks things and you can't boot:
 
 1. Hold `Space` during boot to enter the systemd-boot menu.
 2. Pick the previous generation (the boot menu shows them all).
-3. If even the previous generation is broken, pick the `igpu`
-   specialisation (which doesn't load any nvidia module).
+3. If even the previous generation is broken, you can boot into a NixOS live USB to fix the configuration.
 4. Once in the iGPU-only system, revert the offending change:
    ```bash
    cd /persistent/nixos
@@ -484,7 +425,7 @@ prime-run glxinfo | grep "OpenGL renderer"
 glxinfo | grep "OpenGL renderer"
 
 # Force iGPU-only
-# (reboot, pick "nixos (igpu)" from the boot menu)
+# (Everyday apps run on iGPU by default; no special action is needed)
 
 # Logs
 journalctl -b | grep -i nvrm

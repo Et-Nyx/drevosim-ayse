@@ -36,9 +36,12 @@ what is preserved where, and how to add new preservation rules.
   reboots. It holds the Nix store, the system profiles, and the boot
   loader state. `/nix` is the only directory the system actively
   *writes to* in normal operation.
-- `/persistent` is a **Btrfs partition on the HDD**. This is where
+- `/persistent` is a **Btrfs subvolume on the NVMe SSD** (`@persistent`). This is where
   preservation rules copy state to/from. All preserved state ends
-  up here, and is restored from here on the next boot.
+  up here on fast NVMe storage, and is restored from here on the next boot.
+- `/storage` is a **Btrfs partition on the HDD**. This is used for bulk,
+  large-file user directories (Downloads, Music, Videos) which are
+  symlinked back into the home directory.
 
 The system is "NixOS as a stateless container" — the OS itself is
 disposable, and only the things we explicitly preserve survive
@@ -54,7 +57,7 @@ reboots.
 │  ┌─────────────┬─────────┬────────────────────────────────────┐  │
 │  │ ESP (vfat)  │  swap   │  Btrfs (root)                      │  │
 │  │ /boot       │         │  ├─ @nix subvolume → /nix          │  │
-│  │             │         │  └─ flat subvolumes (other Btrfs)  │  │
+│  │             │         │  └─ @persistent subvol → /persistent││
 │  └─────────────┴─────────┴────────────────────────────────────┘  │
 └───────────────────────────────────────────────────────────────────┘
 
@@ -62,16 +65,11 @@ reboots.
 │  /dev/sda                                                         │
 │  ┌────────────────────────────────────────────────────────────┐  │
 │  │ Btrfs (zstd compression)                                   │  │
-│  │ └─ /persistent                                              │  │
-│  │     ├─ etc/ssh/            ← preserved host SSH keys       │  │
-│  │     ├─ var/lib/bluetooth/  ← pairing keys                  │  │
-│  │     ├─ var/lib/NetworkManager/system-connections/          │  │
-│  │     ├─ var/lib/nixos/      ← user/group DB                │  │
-│  │     ├─ var/lib/kokoro-tts/ ← TTS state (custom voices)     │  │
-│  │     ├─ var/lib/SillyTavern/ ← SillyTavern data            │  │
-│  │     ├─ var/lib/ftp-srv/    ← anonymous FTP root            │  │
-│  │     ├─ home/eter/          ← preserved user home subtree   │  │
-│  │     └─ nixos/              ← the flake checkout           │  │
+│  │ └─ /storage                                                │  │
+│  │     └─ home/eter/                                          │  │
+│  │         ├─ Downloads/      ← symlinked to home             │  │
+│  │         ├─ Music/          ← symlinked to home             │  │
+│  │         └─ Videos/         ← symlinked to home             │  │
 │  └────────────────────────────────────────────────────────────┘  │
 └───────────────────────────────────────────────────────────────────┘
 ```
@@ -97,20 +95,19 @@ reboots.
 
 | Path | Why |
 |------|-----|
-| `~/.config` | Broad application and desktop configuration: KDE Plasma, Chromium, KWallet. (Transitional — will be narrowed as dotfiles move into Nix.) |
+| `~/.config` | Broad application and desktop configuration: KDE Plasma, Chromium, Firefox profile, app configs. (Transitional — will be narrowed as dotfiles move into Nix.) |
 | `~/.local/share` | Broad application data. |
 | `~/.local/state` | Application state (e.g. KWallet, Plasma state). |
 | `~/.ssh` | User SSH keys and `known_hosts`. |
 | `~/Desktop` | XDG user folder. |
 | `~/Documents` | XDG user folder. |
-| `~/Downloads` | XDG user folder. |
-| `~/Games` | XDG user folder. Used by Heroic and Steam for large game installs that would otherwise fill the tmpfs root. |
-| `~/Music` | XDG user folder. |
+| `~/Games` | XDG user folder. Game data is kept on the SSD for maximum loading performance. |
 | `~/Pictures` | XDG user folder. |
 | `~/Projects` | XDG user folder. |
 | `~/Public` | XDG user folder. |
 | `~/Templates` | XDG user folder. |
-| `~/Videos` | XDG user folder. |
+
+*Note: `~/Downloads`, `~/Music`, and `~/Videos` are not preserved via the preservation module; they live directly on the HDD (`/storage/home/eter/...`) and are symlinked into the home directory by systemd-tmpfiles at boot.*
 
 The whole `home/eter` subtree is preserved under
 `/persistent/home/eter`, so the home directory and all its preserved
@@ -366,9 +363,7 @@ The user subtree only works for the **declared** user. Make sure
 
 ### "Boot is slow / boot is hanging"
 
-`/persistent` is on a slow HDD. If you have a lot of preserved
-state, the copy on shutdown (and on boot) takes time. Check:
-
+`/persistent` has been moved to the NVMe SSD, so copy times at boot and shutdown are near-instantaneous. If you still encounter slow boots, check the sizes of files in `/persistent`:
 ```bash
 du -sh /persistent/*
 ```
@@ -443,9 +438,9 @@ prefix is consistent.)
 
 If preservation breaks and the system won't boot:
 
-1. From a NixOS installer USB, mount the persistent partition:
+1. From a NixOS installer USB, mount the persistent subvolume:
    ```bash
-   mount /dev/sda /mnt
+   mount -o subvol=@persistent /dev/nvme0n1p3 /mnt
    ls /mnt
    ```
 2. Your state is there. Copy it off to a safe location:

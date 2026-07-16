@@ -60,23 +60,15 @@
               mountOptions = [ "subvol=nix" "noatime" ];
               mountpoint = "/nix";
             };
-            # @cache: fast-scratch subvolume on the NVMe SSD. The 4 GB
-            # tmpfs root is too small for multi-gigabyte write buffers
-            # (notably the rclone-ps4 VFS cache when copying PS4 game
-            # .pkg files). This subvolume lives on the SSD with
-            # compress=zstd, giving us ~180 GB of fast scratch space
-            # without touching the HDD.
-            #
-            # Services create their own subdirectories under
-            # /mnt/ssd/cache/<name>/ via systemd.tmpfiles rules; see
-            # gida/ssd-cache.md for the convention.
-            "/@cache" = {
+            # @persistent: persistent state subvolume on the NVMe SSD.
+            # This makes all preserved system and user configuration run on the SSD.
+            "/@persistent" = {
               mountOptions = [
-                "subvol=@cache"
+                "subvol=@persistent"
                 "noatime"
                 "compress=zstd"
               ];
-              mountpoint = "/mnt/ssd/cache";
+              mountpoint = "/persistent";
             };
           };
         };
@@ -108,7 +100,7 @@
         content = {
           type = "filesystem";
           format = "btrfs";
-          mountpoint = "/persistent";
+          mountpoint = "/storage";
           mountOptions = [ "compress=zstd" "noatime" ];
         };
       };

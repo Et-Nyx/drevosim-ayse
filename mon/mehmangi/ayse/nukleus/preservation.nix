@@ -64,14 +64,11 @@
             # Standard XDG user folders.
             "Desktop"
             "Documents"
-            "Downloads"
             "Games"
-            "Music"
             "Pictures"
             "Projects"
             "Public"
             "Templates"
-            "Videos"
           ];
         };
       };

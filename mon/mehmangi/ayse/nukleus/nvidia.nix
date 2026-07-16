@@ -97,15 +97,7 @@
         ATTR{power/control}="on", ATTR{d3cold_allowed}="0"
     '';
 
-    # Global PRIME render-offload env vars. Makes the dGPU the primary
-    # renderer for user-launched apps. Apps that want to opt out can
-    # `unset __NV_PRIME_RENDER_OFFLOAD` at launch.
-    environment.sessionVariables = {
-      __NV_PRIME_RENDER_OFFLOAD = "1";
-      __NV_PRIME_RENDER_OFFLOAD_PROVIDER = "NVIDIA-G0";
-      __GLX_VENDOR_LIBRARY_NAME = "nvidia";
-      __VK_LAYER_NV_optimus = "NVIDIA_only";
-    };
+
 
     # Make nvidia-persistenced wait for the nvidia kernel module and the
     # device nodes it creates. We depend on the nvidia module (which is in
@@ -124,32 +116,6 @@
       ];
     };
 
-    # iGPU-only fallback specialisation. Boot into this from the boot menu
-    # if the NVIDIA dGPU fails to wake from D3 (or any other driver issue).
-    # The system comes up clean on the Intel iGPU.
-    specialisation.igpu.configuration = {
-      system.nixos.tags = [ "igpu" ];
-      boot.kernelParams = lib.mkAfter [ "nvidia-drm.modeset=0" ];
-      services.xserver.videoDrivers = lib.mkForce [ "modesetting" ];
-      hardware.nvidia.modesetting.enable = lib.mkForce false;
-      # Blacklist the nvidia kernel modules so they don't load in initrd or
-      # runtime and try to probe the dGPU (which may be in D3cold). Without
-      # this, the initrd boot fails because the nvidia module hangs/errors
-      # when it can't access the device.
-      boot.blacklistedKernelModules = [
-        "nvidia"
-        "nvidia_drm"
-        "nvidia_modeset"
-        "nvidia_uvm"
-        "nvidia_peermem"
-      ];
-      # Unset the PRIME offload vars; preserve everything else.
-      environment.sessionVariables = {
-        __NV_PRIME_RENDER_OFFLOAD = lib.mkForce null;
-        __NV_PRIME_RENDER_OFFLOAD_PROVIDER = lib.mkForce null;
-        __GLX_VENDOR_LIBRARY_NAME = lib.mkForce null;
-        __VK_LAYER_NV_optimus = lib.mkForce null;
-      };
-    };
+
   };
 }
