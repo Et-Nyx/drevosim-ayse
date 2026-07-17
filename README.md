@@ -25,7 +25,6 @@ See [`gida/preservation.md`](gida/preservation.md) for the full rules and what i
 ├── README.md              # this file
 ├── gida/                  # operator's manuals (one per major module)
 │   ├── ftp-ayse.md
-│   ├── ftp-ps4.md
 │   ├── kokoro.md
 │   ├── sillytavern.md
 │   ├── nvidia.md
@@ -89,8 +88,7 @@ See [`gida/preservation.md`](gida/preservation.md) for the full rules and what i
 │       │   │   ├── dashboard.html    # Kokoro web dashboard UI
 │       │   │   └── dashboard_main.py # Kokoro dashboard middleware
 │       │   ├── ftp/                  # FTP services
-│       │   │   ├── ayse.nix          # anonymous FTP server (vsftpd)
-│       │   │   └── ps4.nix           # PS4 FTP client mount (rclone FUSE)
+│       │   │   └── ayse.nix          # anonymous FTP server (vsftpd)
 │       │   └── faylu/                # raw config files (filtered from import-tree)
 │       │       └── mako.ini
 │       ├── terminal/      # terminal emulators, shells & CLI tools
@@ -228,13 +226,7 @@ A read-write [vsftpd](https://security.appspot.com/vsftpd.html) server with no a
 
 See [`gida/ftp-ayse.md`](gida/ftp-ayse.md) for the full operator's manual (connection examples, upload/download, troubleshooting).
 
-### PS4 FTP mount
 
-Configured in `mon/sifa/servi/ftp/ps4.nix` and enabled at `drevosim.servi.ftp-ps4.enable = true`.
-
-A persistent FUSE mount of the PS4's homebrew FTP server at `192.168.15.200:2121`, exposed at `/mnt/ps4` on ayse. Backed by [rclone](https://rclone.org/ftp/) and a systemd service that auto-recovers when the PS4 comes online. Read-write by default.
-
-See [`gida/ftp-ps4.md`](gida/ftp-ps4.md) for the full operator's manual (architecture, file operations, cache tuning, troubleshooting).
 
 ### Gaming
 
@@ -256,7 +248,7 @@ service management, security and limits, and a quick reference.
 | Guide | Module |
 |-------|--------|
 | [`gida/ftp-ayse.md`](gida/ftp-ayse.md) | `mon/sifa/servi/ftp/ayse.nix` |
-| [`gida/ftp-ps4.md`](gida/ftp-ps4.md) | `mon/sifa/servi/ftp/ps4.nix` |
+| [`gida/ftp-ps4-client.md`](gida/ftp-ps4-client.md) | `mon/sifa/servi/ftp/ps4-client.nix` |
 | [`gida/kokoro.md`](gida/kokoro.md) | `mon/sifa/servi/ai-chat/kokoro.nix` |
 | [`gida/sillytavern.md`](gida/sillytavern.md) | `mon/sifa/servi/ai-chat/sillytavern.nix` |
 | [`gida/nvidia.md`](gida/nvidia.md) | `mon/mehmangi/ayse/nukleus/nvidia.nix` |
@@ -269,10 +261,9 @@ service management, security and limits, and a quick reference.
 - [ ] Move KDE Plasma configuration from preserved `~/.config` into Nix modules.
 - [ ] Decide what else from `/home` should be preserved under `/mnt/data` or via `preservation.nix`.
 - [ ] Consider switching from `legacy_580` to the open kernel modules once the hardware supports it (currently blocked by Pascal).
-- [ ] The anonymous FTP server is plain (no TLS) and unauthenticated; keep it on the LAN/Tailscale only and do not port-forward it. Same for the PS4 FTP mount — it is plain FTP.
+- [ ] The anonymous FTP server is plain (no TLS) and unauthenticated; keep it on the LAN/Tailscale only and do not port-forward it.
 - [x] **Move Firefox profile to SSD and persist cache** — Done. `/persistent` is now on the SSD, and `.cache/mozilla` is symlinked to `/persistent/cache/mozilla`.
 - [x] **Move user persistent state to SSD** — Done. `/persistent` is now on the NVMe SSD `@persistent` subvolume for fast everyday application performance.
 - [x] **Move bulk user data to HDD** — Done. `Downloads`, `Music`, and `Videos` are symlinked to `/storage` on the HDD to conserve SSD space.
 - [ ] **Consider moving Steam / Heroic games to a dedicated path if needed** — Currently `~/Games` is kept on the SSD `/persistent` partition for fast loading performance, but can be moved to `/storage/Games` on the HDD if space becomes constrained.
 - [ ] **Audit other `~/.cache` consumers for SSD migration** — `~/.cache/nix`, etc.
-- [ ] **PS4 FTP** — news pending, see user notes.
