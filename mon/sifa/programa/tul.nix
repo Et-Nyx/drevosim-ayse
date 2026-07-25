@@ -9,6 +9,7 @@
         wget
         fastfetch
         browsh
+        beeper
       ];
     };
 }
