@@ -11,7 +11,6 @@
         browsh
         beeper
         proton-vpn
-        grayjay
       ];
     };
 }

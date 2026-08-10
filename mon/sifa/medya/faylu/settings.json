@@ -1,0 +1,40 @@
+{
+  "Language": { "AppLanguage": 0 },
+  "Home": { "ProgressBar": true },
+  "Search": { "SearchHistory": true, "ProgressBar": true },
+  "Channel": { "ProgressBar": true },
+  "Subscriptions": {
+    "ShowSubscriptionGroups": true,
+    "UseSubscriptionExchange": false,
+    "ProgressBar": true,
+    "ShowWatchMetrics": false,
+    "PeekChannelContents": true
+  },
+  "Playback": {
+    "PrimaryLanguage": 0,
+    "PreferOriginalAudio": true,
+    "DefaultPlaybackSpeed": 3,
+    "PreferredQuality": 0
+  },
+  "Downloads": {
+    "PreferredVideoQuality": 3,
+    "PreferredAudioQuality": 1
+  },
+  "Casting": { "Enabled": true, "Experimental": true },
+  "Logging": { "LogLevel": 2 },
+  "Synchronization": {
+    "Enabled": true,
+    "Broadcast": true,
+    "ConnectDiscovered": true,
+    "ConnectLast": true,
+    "DiscoverThroughRelay": true,
+    "PairThroughRelay": true,
+    "ConnectThroughRelay": true,
+    "ConnectLocalDirectThroughRelay": true,
+    "LocalConnections": true
+  },
+  "Notifications": {
+    "AppUpdates": true,
+    "PluginUpdates": true
+  }
+}
