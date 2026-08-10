@@ -10,6 +10,8 @@
         fastfetch
         browsh
         beeper
+        proton-vpn
+        grayjay
       ];
     };
 }

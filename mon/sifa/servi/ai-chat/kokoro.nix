@@ -243,7 +243,11 @@ in
           Type = "exec";
           # Pass host/port explicitly to uvicorn. The application reads HOST/PORT
           # for its own settings, but uvicorn itself only honours CLI flags here.
-          ExecStart = "${pkg}/bin/kokoro-tts-api --host ${cfg.host} --port ${toString cfg.port}";
+          # Two workers run independent processes so a long /v1/audio/speech
+          # inference on one worker does not block /health, /v1/audio/voices,
+          # or the dashboard on the other. Each worker loads its own copy of
+          # the 82M model (~1.1 GB RAM), so two workers cost ~2.2 GB.
+          ExecStart = "${pkg}/bin/kokoro-tts-api --host ${cfg.host} --port ${toString cfg.port} --workers 2";
           Restart = "on-failure";
           RestartSec = "5";
 

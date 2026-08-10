@@ -46,25 +46,35 @@ The service exposes an OpenAI-compatible text-to-speech API at
 ## How it works
 
 ```
-┌──────────────┐   HTTP/8880  ┌────────────────┐
-│   Client     │<────────────>│ uvicorn        │
-│ (SillyTavern,│  /v1/*       │ (kokoro-tts)   │
-│  curl,       │  /dashboard  │                │
-│  browser)    │              │  ├─ dashboard  │
-└──────────────┘              │  │  middleware │
-                              │  │  (logging,  │
-                              │  │   voices,   │
-                              │  │   redirect) │
-                              │  └─ FastAPI    │
-                              │     app        │
-                              └───────┬────────┘
-                                      │
-                                      ▼
+┌──────────────┐   HTTP/8880  ┌────────────────────┐
+│   Client     │<────────────>│ uvicorn            │
+│ (SillyTavern,│  /v1/*       │ (kokoro-tts)       │
+│  curl,       │  /dashboard  │   ├─ worker 0      │
+│  browser)    │              │   │  ├─ dashboard  │
+└──────────────┘              │   │  │  middleware │
+                               │   │  │  (logging,  │
+                               │   │  │   voices,   │
+                               │   │  │   redirect) │
+                               │   │  └─ FastAPI    │
+                               │   │     app        │
+                               │   └─ worker 1      │
+                               │      (same shape)  │
+                               └───────┬────────────┘
+                                       │
+                                       ▼
                        Kokoro-82M v1.0 (~327 MB)
                        67 voice packs (.pt files)
                        en_core_web_sm (spaCy)
                        misaki (G2P)
 ```
+
+The uvicorn process is launched with `--workers 2` (see
+`mon/sifa/servi/ai-chat/kokoro.nix:246`). Each worker is an
+independent process with its own copy of the 82M model in RAM
+(~1.1 GB each, so the service uses ~2.2 GB at idle). Requests are
+dispatched to whichever worker is free, so a long `/v1/audio/speech`
+inference on one worker does not block `/health`, `/v1/audio/voices`,
+or dashboard polling on the other.
 
 - **uvicorn** runs the FastAPI app `api.src.dashboard_main:app` (see
   `mon/sifa/servi/ai-chat/dashboard_main.py`). The wrapper sits in
@@ -435,6 +445,20 @@ The model is still loading. First start takes 20–40 seconds. Watch:
 journalctl -u kokoro-tts -f
 ```
 
+If `/health` times out *after* startup, another `/v1/audio/speech`
+request is holding a worker. The unit runs two uvicorn workers, so
+the other worker should pick the probe up within a few seconds. If
+both workers are saturated, the request is simply queued — the
+service is not stuck.
+
+### `/v1/audio/speech` is slow
+
+Expected on CPU. Each ~200-token chunk takes roughly 20–40 s on the
+Pascal MX150's i7; a long paragraph of 16 chunks can take 5–10
+minutes end-to-end. The client should stream the response, not wait
+for the whole body. If you need faster turnaround, enable GPU mode
+(`drevosim.servi.kokoro.gpu = true`) — see [GPU mode](#gpu-mode).
+
 ### 500 errors on `/v1/audio/speech`
 
 Check the journal for the actual stack trace. Common causes:
@@ -492,7 +516,14 @@ journalctl -u kokoro-tts -n 50 --no-pager
 
 The unit runs with:
 
-- `Type = exec` — no forking.
+- `Type = exec` — no forking by the unit. Uvicorn itself forks
+  the two workers from its parent process; the parent stays as the
+  systemd-tracked PID and reaps workers on stop.
+- `--workers 2` on the `uvicorn` command line — two independent
+  worker processes, each with its own copy of the 82M model in RAM
+  (~1.1 GB per worker, ~2.2 GB total at idle). Requests are
+  dispatched round-robin, so a long inference on one worker does
+  not block `/health`, `/v1/audio/voices`, or the dashboard.
 - `User = kokoro-tts` — dedicated static user (not `DynamicUser`,
   because `StateDirectory` collides with the preservation bind-mount).
 - `Group = kokoro-tts`, plus `video` when GPU mode is on.
