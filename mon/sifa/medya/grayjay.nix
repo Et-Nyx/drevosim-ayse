@@ -3,7 +3,8 @@ let
   defaultSettings = builtins.readFile ./faylu/settings.json;
 
   mkMisuGrayjay = pkgs: settings:
-    (pkgs.writeShellScriptBin "Grayjay" ''
+  let
+    wrapper = pkgs.writeShellScriptBin "Grayjay" ''
       set -e
 
       if [ -n "$XDG_DATA_HOME" ] && [ -d "$XDG_DATA_HOME" ]; then
@@ -16,7 +17,12 @@ let
       ${pkgs.coreutils}/bin/cp -f ${pkgs.writeText "settings.json" settings} "$data_dir/settings.json"
 
       exec ${pkgs.grayjay}/bin/Grayjay "$@"
-    '');
+    '';
+  in
+  pkgs.symlinkJoin {
+    name = "Grayjay";
+    paths = [ wrapper pkgs.grayjay ];
+  };
 in
 {
   flake.nixosModules.sifa.medya.grayjay =

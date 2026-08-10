@@ -27,6 +27,12 @@
         group = "root";
         mode = "0400";
       };
+      ayse-tailscale-auth = {
+        file = self + /siri/ayse-tailscale-auth.age;
+        owner = "root";
+        group = "root";
+        mode = "0400";
+      };
     };
   };
 }
