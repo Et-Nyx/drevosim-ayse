@@ -67,7 +67,7 @@ in
 
       # --- 2. Patch declarative config.yaml flags ---
       ${pkgs.yq-go}/bin/yq -i '.listen = true' "$CFG_FILE"
-      ${pkgs.yq-go}/bin/yq -i '.listenAddress.ipv4 = "0.0.0.0"' "$CFG_FILE"
+      ${pkgs.yq-go}/bin/yq -i '.listenAddress.ipv4 = "127.0.0.1"' "$CFG_FILE"
       ${pkgs.yq-go}/bin/yq -i '.whitelistMode = true' "$CFG_FILE"
       ${pkgs.yq-go}/bin/yq -i '.whitelist = ["127.0.0.1", "::1", "100.64.0.0/10"]' "$CFG_FILE"
       ${pkgs.yq-go}/bin/yq -i '.extensions.autoUpdate = false' "$CFG_FILE"
@@ -222,7 +222,7 @@ in
 
       host = lib.mkOption {
         type = lib.types.str;
-        default = "0.0.0.0";
+        default = "127.0.0.1";
         description = "Address to bind SillyTavern to.";
       };
 

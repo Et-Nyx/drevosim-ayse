@@ -17,7 +17,11 @@
       };
       ports = lib.mkOption {
         type = lib.types.listOf lib.types.port;
-        default = [ 8000 8880 ];
+        default = [
+          8000 # SillyTavern
+          8880 # Kokoro TTS API
+          12315 # Grayjay sync listener
+        ];
         description = "TCP ports opened on the tailscale0 interface only.";
       };
       serve = lib.mkOption {
@@ -58,7 +62,7 @@
           ExecStart = pkgs.writeShellScript "tailscale-serve" ''
             set -euo pipefail
             ${lib.concatStringsSep "\n" (lib.mapAttrsToList (port: backend: ''
-              ${config.services.tailscale.package}/bin/tailscale serve --bg --https=${port} ${backend} --yes
+              ${config.services.tailscale.package}/bin/tailscale serve --bg --yes --https=${port} ${backend}
             '') cfg.serve)}
           '';
         };

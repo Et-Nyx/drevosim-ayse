@@ -181,7 +181,7 @@ in
 
       host = lib.mkOption {
         type = lib.types.str;
-        default = "0.0.0.0";
+        default = "127.0.0.1";
         description = "Address to bind the Kokoro TTS API to.";
       };
 
