@@ -29,7 +29,7 @@
 
       libraryDir = lib.mkOption {
         type = lib.types.str;
-        default = "/storage/home/eter/Calibre Library";
+        default = "/storage/home/eter/Biblioteca do calibre";
         description = "Calibre library served by the content server. Must match drevosim.medya.calibre.libraryDir.";
       };
     };

@@ -233,7 +233,7 @@ See [`gida/ftp-ayse.md`](gida/ftp-ayse.md) for the full operator's manual (conne
 
 Configured in `mon/sifa/medya/calibre.nix` (desktop app) and `mon/sifa/servi/calibre.nix` (content server), with the server enabled at `drevosim.servi.calibre.enable = true`.
 
-The [Calibre](https://calibre-ebook.com/) e-book manager (GUI + `calibre-server`) with the library symlinked to `/storage/home/eter/Calibre Library` on the HDD — the same pattern as `Downloads`/`Music`/`Videos` — so books survive the tmpfs root. The content server binds `0.0.0.0:8080` with the web UI at `/` and an [OPDS](https://opds.io/) catalog at `/opds` for reader apps; it runs as `eter` so the GUI and server share the same library and settings. **Do not port-forward 8080 to the public internet.**
+The [Calibre](https://calibre-ebook.com/) e-book manager (GUI + `calibre-server`) with the library symlinked to `/storage/home/eter/Biblioteca do calibre` on the HDD — the same pattern as `Downloads`/`Music`/`Videos` — so books survive the tmpfs root. The localized folder name matches Calibre's default under the `pt_BR` locale. The content server binds `0.0.0.0:8080` with the web UI at `/` and an [OPDS](https://opds.io/) catalog at `/opds` for reader apps; it runs as `eter` so the GUI and server share the same library and settings. **Do not port-forward 8080 to the public internet.**
 
 See [`gida/calibre.md`](gida/calibre.md) for the full operator's manual (web UI, OPDS, library on the HDD, troubleshooting).
 

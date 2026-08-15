@@ -45,7 +45,7 @@ The content server is an optional convenience: the GUI works fully offline.
 ```
 ┌──────────────┐   GUI        ┌────────────────┐   disk   ┌──────────────────────┐
 │  Desktop app │─────────────▶│ calibre        │<────────>│ /storage/home/eter/  │
-│  (as eter)   │              │ (as eter)      │          │   Calibre Library    │
+│  (as eter)   │              │ (as eter)      │          │ Biblioteca do calibre │
 └──────────────┘              └────────────────┘          │   ├─ metadata.db     │
                                                      ┌───▶│   ├─ author/         │
 ┌──────────────┐   HTTP/8080  ┌──────────────────┐   │    │   └─ book/           │
@@ -56,9 +56,9 @@ The content server is an optional convenience: the GUI works fully offline.
 ```
 
 - **Desktop app** — the `calibre` package from nixpkgs. On first launch it
-  asks for a library folder; point it at `~/Calibre Library`.
-- **Library** — `~/Calibre Library` is a symlink (created by
-  `systemd.tmpfiles`) to `/storage/home/eter/Calibre Library` on the HDD, the
+  asks for a library folder; point it at `~/Biblioteca do calibre`.
+- **Library** — `~/Biblioteca do calibre` is a symlink (created by
+  `systemd.tmpfiles`) to `/storage/home/eter/Biblioteca do calibre` on the HDD, the
   same pattern as `Downloads`/`Music`/`Videos`. The library survives reboots
   because the HDD partition is persistent; `/home` is tmpfs.
 - **Content server** — a systemd service runs
@@ -75,7 +75,7 @@ The content server is an optional convenience: the GUI works fully offline.
 | Option | Default | Description |
 |--------|---------|-------------|
 | `enable` | `true` | Install Calibre and set up the library symlink. |
-| `libraryDir` | `/storage/home/eter/Calibre Library` | Where the library lives on the HDD. |
+| `libraryDir` | `/storage/home/eter/Biblioteca do calibre` | Where the library lives on the HDD. |
 
 ### Content server (`drevosim.servi.calibre.*`)
 
@@ -85,7 +85,7 @@ The content server is an optional convenience: the GUI works fully offline.
 | `host` | `0.0.0.0` | Bind address. `127.0.0.1` restricts to this machine. |
 | `port` | `8080` | Content server port. |
 | `openFirewall` | `true` | Open the port in the firewall. |
-| `libraryDir` | `/storage/home/eter/Calibre Library` | Library served by the server. Keep in sync with the desktop option. |
+| `libraryDir` | `/storage/home/eter/Biblioteca do calibre` | Library served by the server. Keep in sync with the desktop option. |
 
 To change any of these, edit `mon/mehmangi/ayse/estandar.nix`:
 
@@ -119,7 +119,7 @@ Then `sudo nixos-rebuild switch --flake .`.
 
    ```bash
    ls -la /home/eter/ | grep Calibre
-   # -> /home/eter/Calibre Library -> /storage/home/eter/Calibre Library
+   # -> /home/eter/Biblioteca do calibre -> /storage/home/eter/Biblioteca do calibre
    ```
 
 4. Open the server in a browser: `http://ayse.local:8080/`
@@ -131,7 +131,7 @@ Then `sudo nixos-rebuild switch --flake .`.
 ## The desktop app
 
 Launch `calibre` from the application menu or a terminal. On first run it
-asks where your library lives — choose `~/Calibre Library` (already
+asks where your library lives — choose `~/Biblioteca do calibre` (already
 symlinked to the HDD).
 
 Typical workflows:
@@ -146,7 +146,7 @@ Typical workflows:
   reader/phone is plugged in.
 
 > **Note:** Calibre keeps its settings in `~/.config/calibre` and the app's
-> preview data under `~/Calibre Library`. On this impermanent setup,
+> preview data under `~/Biblioteca do calibre`. On this impermanent setup,
 > `~/.config` is preserved across reboots (see `gida/preservation.md`), and
 > the library itself lives on the HDD, so nothing is lost on reboot.
 
@@ -193,7 +193,7 @@ curl -o book.epub "http://ayse.local:8080/browse/book/2/download/1/Book.epub"
 
 ## Library on the HDD
 
-The library is `~/Calibre Library → /storage/home/eter/Calibre Library` on
+The library is `~/Biblioteca do calibre → /storage/home/eter/Biblioteca do calibre` on
 the Btrfs partition of `/dev/sda`, the same place as `Downloads`/`Music`/
 `Videos`. This keeps e-books (which are large-ish and grow over time) off the
 SSD and off the tmpfs root.
@@ -201,7 +201,7 @@ SSD and off the tmpfs root.
 ### Disk usage
 
 ```bash
-du -sh "/storage/home/eter/Calibre Library"
+du -sh "/storage/home/eter/Biblioteca do calibre"
 df -h /storage
 ```
 
@@ -230,12 +230,12 @@ Common causes:
 - The library directory is missing — the service needs it to exist. Create
   it (or run the GUI once) and restart:
   ```bash
-  sudo -u eter mkdir -p "/storage/home/eter/Calibre Library"
+  sudo -u eter mkdir -p "/storage/home/eter/Biblioteca do calibre"
   sudo systemctl restart calibre-server
   ```
 - Wrong ownership — must be `eter:users`, mode `0755`:
   ```bash
-  sudo chown eter:users "/storage/home/eter/Calibre Library"
+  sudo chown eter:users "/storage/home/eter/Biblioteca do calibre"
   ```
 
 ### "Connection refused" on port 8080
@@ -250,7 +250,7 @@ sudo iptables -L -n | grep 8080
 
 ### The GUI asks to create a new library every launch
 
-The symlink is missing, so Calibre's default `~/Calibre Library` path is
+The symlink is missing, so Calibre's default `~/Biblioteca do calibre` path is
 empty and it thinks the library was deleted. Fix:
 
 ```bash
@@ -339,7 +339,7 @@ http://ayse.local:8080/opds
 
 # Library location
 ls -la /home/eter/ | grep Calibre
-du -sh "/storage/home/eter/Calibre Library"
+du -sh "/storage/home/eter/Biblioteca do calibre"
 ```
 
 If something doesn't work, check `journalctl -u calibre-server -n 50` first.

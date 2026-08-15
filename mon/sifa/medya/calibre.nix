@@ -13,8 +13,8 @@
 
       libraryDir = lib.mkOption {
         type = lib.types.str;
-        default = "/storage/home/eter/Calibre Library";
-        description = "Calibre library directory on the HDD, symlinked to ~/Calibre Library.";
+        default = "/storage/home/eter/Biblioteca do calibre";
+        description = "Calibre library directory on the HDD, symlinked to ~/Biblioteca do calibre. Uses the localized folder name Calibre defaults to under pt_BR.";
       };
     };
 
@@ -22,8 +22,9 @@
       environment.systemPackages = [ pkgs.calibre ];
 
       systemd.tmpfiles.rules = [
+        "R /home/eter/Calibre Library"
         "d ${cfg.libraryDir} 0755 eter users - -"
-        "L+ /home/eter/Calibre Library - - - - ${cfg.libraryDir}"
+        "L+ /home/eter/Biblioteca do calibre - - - - ${cfg.libraryDir}"
       ];
     };
   };
