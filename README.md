@@ -55,9 +55,11 @@ See [`gida/preservation.md`](gida/preservation.md) for the full rules and what i
 │       │   └── faylu/     # raw config files (filtered from import-tree)
 │       │       ├── ly.ini
 │       │       └── sddm.conf
-│       ├── medya/         # audio / video
+│       ├── medya/         # audio / video / media
 │       │   ├── bluetooth.nix
+│       │   ├── calibre.nix      # Calibre e-book manager (desktop)
 │       │   ├── pipewire.nix
+│       │   ├── grayjay.nix
 │       │   └── tul.nix
 │       ├── mesa/          # window managers, compositors & desktops
 │       │   ├── plasma.nix
@@ -77,6 +79,7 @@ See [`gida/preservation.md`](gida/preservation.md) for the full rules and what i
 │       │   └── faylu/     # raw config files (filtered from import-tree)
 │       │       └── fuzzel.ini
 │       ├── servi/         # system services
+│       │   ├── calibre.nix      # Calibre content server
 │       │   ├── network.nix
 │       │   ├── openssh.nix
 │       │   ├── mako.nix
@@ -226,6 +229,14 @@ A read-write [vsftpd](https://security.appspot.com/vsftpd.html) server with no a
 
 See [`gida/ftp-ayse.md`](gida/ftp-ayse.md) for the full operator's manual (connection examples, upload/download, troubleshooting).
 
+### Calibre
+
+Configured in `mon/sifa/medya/calibre.nix` (desktop app) and `mon/sifa/servi/calibre.nix` (content server), with the server enabled at `drevosim.servi.calibre.enable = true`.
+
+The [Calibre](https://calibre-ebook.com/) e-book manager (GUI + `calibre-server`) with the library symlinked to `/storage/home/eter/Calibre Library` on the HDD — the same pattern as `Downloads`/`Music`/`Videos` — so books survive the tmpfs root. The content server binds `0.0.0.0:8080` with the web UI at `/` and an [OPDS](https://opds.io/) catalog at `/opds` for reader apps; it runs as `eter` so the GUI and server share the same library and settings. **Do not port-forward 8080 to the public internet.**
+
+See [`gida/calibre.md`](gida/calibre.md) for the full operator's manual (web UI, OPDS, library on the HDD, troubleshooting).
+
 
 
 ### Gaming
@@ -247,6 +258,7 @@ service management, security and limits, and a quick reference.
 
 | Guide | Module |
 |-------|--------|
+| [`gida/calibre.md`](gida/calibre.md) | `mon/sifa/medya/calibre.nix`, `mon/sifa/servi/calibre.nix` |
 | [`gida/ftp-ayse.md`](gida/ftp-ayse.md) | `mon/sifa/servi/ftp/ayse.nix` |
 | [`gida/ftp-ps4-client.md`](gida/ftp-ps4-client.md) | `mon/sifa/servi/ftp/ps4-client.nix` |
 | [`gida/kokoro.md`](gida/kokoro.md) | `mon/sifa/servi/ai-chat/kokoro.nix` |

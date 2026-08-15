@@ -27,10 +27,10 @@
     "Broadcast": true,
     "ConnectDiscovered": true,
     "ConnectLast": true,
-    "DiscoverThroughRelay": true,
-    "PairThroughRelay": true,
-    "ConnectThroughRelay": true,
-    "ConnectLocalDirectThroughRelay": true,
+    "DiscoverThroughRelay": false,
+    "PairThroughRelay": false,
+    "ConnectThroughRelay": false,
+    "ConnectLocalDirectThroughRelay": false,
     "LocalConnections": true
   },
   "Notifications": {
