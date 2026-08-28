@@ -7,6 +7,9 @@
       brightnessctl
       playerctl
       ffmpeg
+      stremio-service
+      krita
+      rPackages.hermes
     ];
   };
 }

@@ -7,6 +7,7 @@
       neovim
       zed-editor
       antigravity-cli
+      onlyoffice-desktopeditors
     ];
   };
 }
