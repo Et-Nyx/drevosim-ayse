@@ -9,7 +9,6 @@
       ffmpeg
       stremio-service
       krita
-      rPackages.hermes
     ];
   };
 }

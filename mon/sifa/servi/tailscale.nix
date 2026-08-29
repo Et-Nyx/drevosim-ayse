@@ -59,8 +59,18 @@
         serviceConfig = {
           Type = "oneshot";
           RemainAfterExit = true;
+          Restart = "on-failure";
+          RestartSec = "5s";
           ExecStart = pkgs.writeShellScript "tailscale-serve" ''
             set -euo pipefail
+            # tailscaled reports NoState for a few seconds after (re)start;
+            # wait until it is ready before applying Serve routes.
+            for _ in $(seq 1 30); do
+              if ${config.services.tailscale.package}/bin/tailscale status --peers=false >/dev/null 2>&1; then
+                break
+              fi
+              sleep 1
+            done
             ${lib.concatStringsSep "\n" (lib.mapAttrsToList (port: backend: ''
               ${config.services.tailscale.package}/bin/tailscale serve --bg --yes --https=${port} ${backend}
             '') cfg.serve)}

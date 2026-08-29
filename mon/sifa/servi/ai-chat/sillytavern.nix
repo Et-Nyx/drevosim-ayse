@@ -19,7 +19,7 @@ in
       patchPhase = ''
         # Always use cl-helper proxy when apiRequest is available.
         substituteInPlace modules/providers/chartavern/chartavern-api.js \
-          --replace-fail 'if (ctSessionActive && apiRequest) {' 'if (apiRequest) {'
+          --replace-fail 'if (apiRequest && (ctSessionActive || await ctHelperAvailable(apiRequest))) {' 'if (apiRequest) {'
       '';
       installPhase = ''
         cp -r . "$out"

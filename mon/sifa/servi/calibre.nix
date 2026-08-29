@@ -2,9 +2,12 @@
 {
   flake.nixosModules.sifa.servi.calibre =
   { config, lib, pkgs, ... }:
-  let
-    cfg = config.drevosim.servi.calibre;
-  in
+    let
+      cfg = config.drevosim.servi.calibre;
+      # systemd list settings split on spaces; quote so paths like
+      # "Biblioteca do calibre" stay one entry.
+      quotedLibraryDir = "\"" + cfg.libraryDir + "\"";
+    in
   {
     options.drevosim.servi.calibre = {
       enable = lib.mkEnableOption "Calibre content server" // {
@@ -44,7 +47,7 @@
 
         serviceConfig = {
           Type = "simple";
-          ExecStart = "${pkgs.calibre}/bin/calibre-server --host ${cfg.host} --port ${toString cfg.port} --with-library ${cfg.libraryDir}";
+          ExecStart = "${pkgs.calibre}/bin/calibre-server --listen-on ${cfg.host} --port ${toString cfg.port} \"${cfg.libraryDir}\"";
           Restart = "on-failure";
           RestartSec = "5";
 
@@ -57,7 +60,7 @@
           # Hardening
           NoNewPrivileges = true;
           ProtectSystem = "strict";
-          ReadWritePaths = cfg.libraryDir;
+          ReadWritePaths = [ quotedLibraryDir ];
           PrivateTmp = true;
         };
       };

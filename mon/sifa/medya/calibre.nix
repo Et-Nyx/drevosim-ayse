@@ -4,7 +4,10 @@
   { config, lib, pkgs, ... }:
   let
     cfg = config.drevosim.medya.calibre;
-  in
+      # systemd path fields split on spaces; escape so paths like
+      # "Biblioteca do calibre" stay one field.
+      escapedLibraryDir = lib.replaceStrings [ " " ] [ "\\x20" ] cfg.libraryDir;
+    in
   {
     options.drevosim.medya.calibre = {
       enable = lib.mkEnableOption "Calibre e-book manager" // {
@@ -22,9 +25,9 @@
       environment.systemPackages = [ pkgs.calibre ];
 
       systemd.tmpfiles.rules = [
-        "R /home/eter/Calibre Library"
-        "d ${cfg.libraryDir} 0755 eter users - -"
-        "L+ /home/eter/Biblioteca do calibre - - - - ${cfg.libraryDir}"
+        "R /home/eter/Calibre\\x20Library"
+        "d ${escapedLibraryDir} 0755 eter users - -"
+        "L+ /home/eter/Biblioteca\\x20do\\x20calibre - - - - ${cfg.libraryDir}"
       ];
     };
   };
