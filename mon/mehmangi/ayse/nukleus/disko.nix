@@ -43,12 +43,14 @@
           extraArgs = [ "-f" ];
 
           subvolumes = {
+            # disko generates the subvol= option itself; only extra options
+            # belong here (avoids duplicated subvol keys in fstab).
             "@root" = {
-              mountOptions = [ "subvol=@root" "noatime" "compress=zstd" ];
+              mountOptions = [ "noatime" "compress=zstd" ];
               mountpoint = "/";
             };
             "/nix" = {
-              mountOptions = [ "subvol=nix" "noatime" ];
+              mountOptions = [ "noatime" ];
               mountpoint = "/nix";
             };
           };
@@ -58,11 +60,10 @@
 
     # Large SATA HDD: bulk user data.
     #
-    # NOTE: disko is only ever run at format time; the NVMe filesystem also
-    # still carries legacy subvolumes left from the impermanent setup
-    # (@persistent, @persistent-ro-backup snapshot, and the old `persistent`
-    # and `@cache`). They are no longer mounted and are deleted manually
-    # once the traditional layout has been verified.
+    # NOTE: disko is only ever run at format time. The NVMe filesystem still
+    # carries the @persistent-ro-backup snapshot of the pre-migration state;
+    # it is not mounted and can be deleted manually once it is no longer
+    # wanted.
     disko.devices.disk.home = {
       device = "/dev/disk/by-id/ata-WDC_WD10SPZX-75Z10T2_WX21E78E5Z24";
       type = "disk";
