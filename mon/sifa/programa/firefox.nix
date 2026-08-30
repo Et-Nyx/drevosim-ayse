@@ -15,8 +15,7 @@
     config = lib.mkIf opsyon.enable {
       systemd.tmpfiles.rules = [
         "d /home/eter/.cache 0755 eter users - -"
-        "d /persistent/cache/mozilla 0755 eter users - -"
-        "L+ /home/eter/.cache/mozilla - - - - /persistent/cache/mozilla"
+        "d /home/eter/.cache/mozilla 0755 eter users - -"
       ];
 
       programs.firefox = {

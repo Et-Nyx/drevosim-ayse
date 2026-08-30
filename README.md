@@ -1,6 +1,6 @@
-# NixOS — Impermanent Setup
+# NixOS — Traditional Setup
 
-This repository contains the declarative NixOS configuration for a single machine (`ayse`) running an **impermanent** (ephemeral root) setup with [Disko](https://github.com/nix-community/disko) and [preservation](https://github.com/nix-community/preservation).
+This repository contains the declarative NixOS configuration for a single machine (`ayse`) running a **traditional** persistent-root setup with [Disko](https://github.com/nix-community/disko). The root filesystem is a regular Btrfs subvolume on the SSD; everything on disk survives reboots without any special persistence plumbing.
 
 The flake is organized in a dendritic (tree-like) structure inspired by [Drevosim](flakes/drevosim-ayse/README.md): a single flake root feeds a trunk of module directories, which split into hosts, features, helpers, and secrets.
 
@@ -8,13 +8,11 @@ This `README.md` covers the **what and where** — the file layout, the disks, t
 
 ## Overview
 
-- **Root filesystem (`/`)**: `tmpfs` created fresh on every boot.
-- **`/home`**: `tmpfs`, recreated fresh on every boot.
-- **`/nix`**: Dedicated Btrfs subvolume on the SSD, persisted across reboots.
-- **`/persistent`**: Btrfs partition on the HDD for all system and user state preserved by `preservation`.
+- **Root filesystem (`/`)**: Btrfs subvolume `@root` on the SSD — fully persistent, no tmpfs.
+- **`/home`**: regular directories on the root filesystem.
+- **`/nix`**: Dedicated Btrfs subvolume on the SSD.
+- **`/storage`**: Btrfs partition on the HDD for bulk user data.
 - **Desktop**: KDE Plasma 6 with SDDM.
-
-See [`gida/preservation.md`](gida/preservation.md) for the full rules and what is and isn't preserved.
 
 ## File Layout
 
@@ -27,8 +25,7 @@ See [`gida/preservation.md`](gida/preservation.md) for the full rules and what i
 │   ├── ftp-ayse.md
 │   ├── kokoro.md
 │   ├── sillytavern.md
-│   ├── nvidia.md
-│   └── preservation.md
+│   └── nvidia.md
 ├── mon/                   # module tree (imported recursively by import-tree)
 │   ├── parts.nix          # flake-parts systems configuration
 │   ├── basi.nix           # shared base options (userName, nix settings, GC, unfree)
@@ -41,9 +38,8 @@ See [`gida/preservation.md`](gida/preservation.md) for the full rules and what i
 │   │           ├── estrutur.nix   # hostname & host-specific structure
 │   │           ├── hardwer.nix    # hardware/kernel configuration
 │   │           ├── xoru.nix       # bootloader configuration
-│   │           ├── disko.nix      # disk partitioning & filesystem layout (incl. @cache SSD subvolume → /mnt/ssd/cache)
+│   │           ├── disko.nix      # disk partitioning & filesystem layout
 │   │           ├── nvidia.nix     # NVIDIA PRIME offload & iGPU specialisation
-│   │           ├── preservation.nix # preservation rules for the ephemeral root
 │   │           └── siri.nix       # agenix secret declarations
 │   └── sifa/              # feature modules
 │       ├── kolor/         # theming & customization
@@ -123,17 +119,19 @@ See [`gida/preservation.md`](gida/preservation.md) for the full rules and what i
 
 Configured in `mon/mehmangi/ayse/nukleus/disko.nix`:
 
-- `/dev/nvme0n1` — SSD (boot, swap, `/nix`, `/persistent`)
+- `/dev/nvme0n1` — SSD (root, boot, swap, `/nix`)
   - `ESP` (1 GiB, vfat, `/boot`)
-  - `swap` (16 GiB)
+  - `swap` (16 GiB, hibernate resume device)
   - `root` (remainder, Btrfs)
+    - subvolume `@root` → `/` (persistent root; the whole OS, `/etc`, `/home`, `/var` live here)
     - subvolume `nix` → `/nix`
-    - subvolume `@persistent` → `/persistent` (holds all system and user home state preserved by `preservation` on fast NVMe storage)
 - `/dev/sda` — HDD (`/storage`)
   - single Btrfs partition with zstd compression
   - holds bulk user data (`Downloads`, `Music`, `Videos`) symlinked back to home to save SSD space
 
 > **Warning:** The Disko configuration references specific device names. Always double-check these paths on the target hardware before running any destructive Disko command.
+>
+> **Note:** The SSD Btrfs filesystem still carries unmounted legacy subvolumes from the former impermanent setup (`@persistent` and its `@persistent-ro-backup` read-only snapshot, plus the old `persistent` and `@cache` subvolumes). They can be deleted once the traditional layout has been verified.
 
 ## Rebuilding the System
 
@@ -175,11 +173,11 @@ sudo nixos-rebuild switch --flake .
    sudo nixos-install --flake .#ayse
    ```
 
-6. Reboot, set the user password, and continue using `nixos-rebuild switch` as normal.
+6. Reboot, restore state (users' home data, `/etc/ssh` host keys), set the user password, and continue using `nixos-rebuild switch` as normal.
 
 ## Notable Configuration Details
 
-- `/etc/nixos` is symlinked to `/persistent/nixos` via `systemd.tmpfiles.rules` so the canonical config survives on the persistent volume.
+- The flake checkout lives directly at `/etc/nixos` on the persistent root.
 - Flakes and `nix-command` are enabled.
 - Automatic GC keeps generations newer than 7 days.
 - SSH is enabled with password authentication (intended to be switched to key-only once keys are deployed).
@@ -225,7 +223,7 @@ See [`gida/sillytavern.md`](gida/sillytavern.md) for the full operator's manual 
 
 Configured in `mon/sifa/servi/ftp/ayse.nix` and enabled at `drevosim.servi.ftp-ayse.enable = true`.
 
-A read-write [vsftpd](https://security.appspot.com/vsftpd.html) server with no authentication, designed for console homebrew FTP clients and LAN file sharing. Binds `0.0.0.0:21` with passive ports `30000–30100`. The anonymous root is `/var/lib/ftp-srv` (read-only); the only writable subdirectory is `upload/`. State preserved on `/persistent`. **Do not expose to the public internet.**
+A read-write [vsftpd](https://security.appspot.com/vsftpd.html) server with no authentication, designed for console homebrew FTP clients and LAN file sharing. Binds `0.0.0.0:21` with passive ports `30000–30100`. The anonymous root is `/var/lib/ftp-srv` (read-only); the only writable subdirectory is `upload/`. **Do not expose to the public internet.**
 
 See [`gida/ftp-ayse.md`](gida/ftp-ayse.md) for the full operator's manual (connection examples, upload/download, troubleshooting).
 
@@ -233,7 +231,7 @@ See [`gida/ftp-ayse.md`](gida/ftp-ayse.md) for the full operator's manual (conne
 
 Configured in `mon/sifa/medya/calibre.nix` (desktop app) and `mon/sifa/servi/calibre.nix` (content server), with the server enabled at `drevosim.servi.calibre.enable = true`.
 
-The [Calibre](https://calibre-ebook.com/) e-book manager (GUI + `calibre-server`) with the library symlinked to `/storage/home/eter/Biblioteca do calibre` on the HDD — the same pattern as `Downloads`/`Music`/`Videos` — so books survive the tmpfs root. The localized folder name matches Calibre's default under the `pt_BR` locale. The content server binds `0.0.0.0:8080` with the web UI at `/` and an [OPDS](https://opds.io/) catalog at `/opds` for reader apps; it runs as `eter` so the GUI and server share the same library and settings. **Do not port-forward 8080 to the public internet.**
+The [Calibre](https://calibre-ebook.com/) e-book manager (GUI + `calibre-server`) with the library symlinked to `/storage/home/eter/Biblioteca do calibre` on the HDD — the same pattern as `Downloads`/`Music`/`Videos` — so books live on the roomy HDD. The localized folder name matches Calibre's default under the `pt_BR` locale. The content server binds `0.0.0.0:8080` with the web UI at `/` and an [OPDS](https://opds.io/) catalog at `/opds` for reader apps; it runs as `eter` so the GUI and server share the same library and settings. **Do not port-forward 8080 to the public internet.**
 
 See [`gida/calibre.md`](gida/calibre.md) for the full operator's manual (web UI, OPDS, library on the HDD, troubleshooting).
 
@@ -247,7 +245,7 @@ Configured in `mon/sifa/yuxi/`:
 - `heroic.nix` — Heroic Games Launcher (Epic, GOG, Amazon Prime Gaming).
 - `tul.nix` — `gamescope`, `mangohud`, `protonup-qt`, `protontricks`, and `programs.gamemode`.
 
-Game data is installed under the preserved `~/Games` directory to avoid filling the 3.9 GB tmpfs root.
+Game data is installed under `~/Games` on the SSD for fast loading performance.
 
 ## Operator's manuals (`gida/`)
 
@@ -264,18 +262,14 @@ service management, security and limits, and a quick reference.
 | [`gida/kokoro.md`](gida/kokoro.md) | `mon/sifa/servi/ai-chat/kokoro.nix` |
 | [`gida/sillytavern.md`](gida/sillytavern.md) | `mon/sifa/servi/ai-chat/sillytavern.nix` |
 | [`gida/nvidia.md`](gida/nvidia.md) | `mon/mehmangi/ayse/nukleus/nvidia.nix` |
-| [`gida/preservation.md`](gida/preservation.md) | `mon/mehmangi/ayse/nukleus/preservation.nix` |
 
 ## Todo / Hardening Notes
 
 - [ ] Deploy SSH keys and set `PasswordAuthentication = false`.
-- [ ] Integrate `nix-maid` to manage dotfiles declaratively and reduce the amount of preserved `~/.config` state.
-- [ ] Move KDE Plasma configuration from preserved `~/.config` into Nix modules.
-- [ ] Decide what else from `/home` should be preserved under `/mnt/data` or via `preservation.nix`.
+- [ ] Integrate `nix-maid` to manage dotfiles declaratively and reduce the amount of hand-managed `~/.config` state.
+- [ ] Move KDE Plasma configuration from `~/.config` into Nix modules.
 - [ ] Consider switching from `legacy_580` to the open kernel modules once the hardware supports it (currently blocked by Pascal).
 - [ ] The anonymous FTP server is plain (no TLS) and unauthenticated; keep it on the LAN/Tailscale only and do not port-forward it.
-- [x] **Move Firefox profile to SSD and persist cache** — Done. `/persistent` is now on the SSD, and `.cache/mozilla` is symlinked to `/persistent/cache/mozilla`.
-- [x] **Move user persistent state to SSD** — Done. `/persistent` is now on the NVMe SSD `@persistent` subvolume for fast everyday application performance.
-- [x] **Move bulk user data to HDD** — Done. `Downloads`, `Music`, and `Videos` are symlinked to `/storage` on the HDD to conserve SSD space.
-- [ ] **Consider moving Steam / Heroic games to a dedicated path if needed** — Currently `~/Games` is kept on the SSD `/persistent` partition for fast loading performance, but can be moved to `/storage/Games` on the HDD if space becomes constrained.
+- [ ] **Delete the legacy Btrfs subvolumes** (`@persistent`, `@persistent-ro-backup`, `persistent`, `@cache`) once the traditional layout has been verified, reclaiming ~25 GiB on the SSD.
+- [ ] **Consider moving Steam / Heroic games to a dedicated path if needed** — Currently `~/Games` is kept on the SSD for fast loading performance, but can be moved to `/storage/Games` on the HDD if space becomes constrained.
 - [ ] **Audit other `~/.cache` consumers for SSD migration** — `~/.cache/nix`, etc.

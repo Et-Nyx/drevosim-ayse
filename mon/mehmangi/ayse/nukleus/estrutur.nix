@@ -5,10 +5,9 @@
   {
     networking.hostName = "ayse";
 
-    # Link /etc/nixos to the persistent flake checkout.
+    # The flake checkout lives directly at /etc/nixos (traditional root —
+    # no symlink indirection needed).
     systemd.tmpfiles.rules = [
-      "L+ /etc/nixos - - - - /persistent/nixos"
-
       # HDD storage directories for bulk user data, symlinked to home
       "d /storage/home 0755 root root - -"
       "d /storage/home/eter 0755 eter users - -"

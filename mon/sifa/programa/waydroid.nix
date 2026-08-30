@@ -16,10 +16,6 @@
       virtualisation.waydroid = {
         enable = true;
       };
-
-      preservation.preserveAt."/persistent".directories = lib.mkIf (config.preservation.enable or false) [
-        "/var/lib/waydroid"
-      ];
     };
   };
 }

@@ -354,14 +354,6 @@ in
           };
         });
 
-      preservation.preserveAt."/persistent".directories = lib.mkIf (config.preservation.enable or false) [
-        {
-          directory = "/var/lib/SillyTavern";
-          user = "sillytavern";
-          group = "sillytavern";
-          mode = "0750";
-        }
-      ];
     };
   };
 }

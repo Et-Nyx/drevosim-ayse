@@ -2,7 +2,6 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-26.05";
-    preservation.url = "github:nix-community/preservation";
     nix-maid.url = "github:viperML/nix-maid";
     import-tree.url = "github:vic/import-tree";
     flake-parts = {

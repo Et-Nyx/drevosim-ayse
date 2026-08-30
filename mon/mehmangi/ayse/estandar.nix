@@ -7,7 +7,6 @@ in
   flake.nixosConfigurations.ayse = inputs.nixpkgs.lib.nixosSystem {
     modules = [
       inputs.disko.nixosModules.disko
-      inputs.preservation.nixosModules.default
       inputs.agenix.nixosModules.default
       inputs.nix-maid.nixosModules.default
       self.nixosModules.basi

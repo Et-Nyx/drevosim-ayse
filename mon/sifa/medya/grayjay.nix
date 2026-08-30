@@ -56,17 +56,7 @@ in
 
       systemd.tmpfiles.rules = [
         "d /home/eter/.local/share 0755 eter users - -"
-        "d /persistent/share/Grayjay 0755 eter users - -"
-        "L+ /home/eter/.local/share/Grayjay - - - - /persistent/share/Grayjay"
-      ];
-
-      preservation.preserveAt."/persistent".directories = lib.mkIf (config.preservation.enable or false) [
-        {
-          directory = "/persistent/share/Grayjay";
-          user = "eter";
-          group = "users";
-          mode = "0755";
-        }
+        "d /home/eter/.local/share/Grayjay 0755 eter users - -"
       ];
 
       networking.firewall = lib.mkIf cfg.openFirewall {

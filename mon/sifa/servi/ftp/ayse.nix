@@ -74,16 +74,18 @@
       };
 
       # The upstream vsftpd module creates the anonymous root with mode 0555
-      # owned by ftp:ftp. The preservation module then widens the root to
-      # 0755 root:ftp so the anonymous user can traverse it. We only need to
-      # ensure the writable 'upload' subdirectory exists with the right
-      # ownership. The rule below runs after both upstream and preservation
-      # rules.
+      # owned by ftp:ftp, which prevents the anonymous user from traversing
+      # it. We only need to ensure the root is widened to 0755 root:ftp and
+      # that the writable 'upload' subdirectory exists with the right
+      # ownership.
       #
       # Note: a 'Z' (recursive) rule on the parent would force the upload
       # subdirectory to root:ftp, which would break anonymous writes, so
       # we use 'd' (single directory) here.
       systemd.tmpfiles.rules = lib.mkAfter [
+        # Non-recursive ('z'): widen only the anonymous root itself so the
+        # anonymous user can traverse it.
+        "z ${cfg.stateDir} 0755 root ftp - -"
         "d ${cfg.stateDir}/upload 0755 ftp ftp - -"
       ];
 
@@ -94,15 +96,6 @@
           to = cfg.passiveMaxPort;
         }];
       };
-
-      preservation.preserveAt."/persistent".directories = lib.mkIf (config.preservation.enable or false) [
-        {
-          directory = cfg.stateDir;
-          user = "root";
-          group = "ftp";
-          mode = "0755";
-        }
-      ];
     };
   };
 }

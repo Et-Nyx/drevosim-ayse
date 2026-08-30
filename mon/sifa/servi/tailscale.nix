@@ -77,15 +77,6 @@
           '';
         };
       };
-
-      preservation.preserveAt."/persistent".directories = lib.mkIf (config.preservation.enable or false) [
-        {
-          directory = "/var/lib/tailscale";
-          user = "root";
-          group = "root";
-          mode = "0755";
-        }
-      ];
     };
   };
 }

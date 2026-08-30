@@ -211,8 +211,8 @@ in
         }
       ];
 
-      # Dedicated static user/group. This avoids the DynamicUser + StateDirectory
-      # conflict with preservation's bind-mount at /var/lib/kokoro-tts.
+      # Dedicated static user/group instead of DynamicUser so the state
+      # directory ownership stays predictable.
       users.users.kokoro-tts = {
         isSystemUser = true;
         group = "kokoro-tts";
@@ -265,15 +265,6 @@ in
           PrivateTmp = true;
         };
       };
-
-      preservation.preserveAt."/persistent".directories = lib.mkIf (config.preservation.enable or false) [
-        {
-          directory = cfg.stateDir;
-          user = "kokoro-tts";
-          group = "kokoro-tts";
-          mode = "0750";
-        }
-      ];
     };
   };
 

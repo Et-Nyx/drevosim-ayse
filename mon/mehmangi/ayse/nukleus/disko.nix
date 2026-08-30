@@ -3,23 +3,10 @@
   flake.nixosModules.ayse.nukleus.disko =
   { ... }:
   {
+    fileSystems."/".neededForBoot = true;
     fileSystems."/nix".neededForBoot = true;
-    fileSystems."/persistent".neededForBoot = true;
 
-    disko.devices.nodev = {
-      # Root tmpfs. 25% of 16G RAM = 4G, enough for /, /home, /tmp, /var/tmp,
-      # and transient runtime state. Real home data lives on /persistent and is
-      # bind-mounted in by the preservation module.
-      "/" = {
-        fsType = "tmpfs";
-        mountOptions = [
-          "size=25%"
-          "mode=755"
-        ];
-      };
-    };
-
-    # Fast NVMe SSD: boot, swap, and the Nix store.
+    # Fast NVMe SSD: root, boot, swap, and the Nix store.
     disko.devices.disk.main = {
       device = "/dev/disk/by-id/nvme-SSSTC_CL1-4D256_SS0X49598L1BR0AM50LN_1";
       type = "disk";
@@ -56,37 +43,26 @@
           extraArgs = [ "-f" ];
 
           subvolumes = {
+            "@root" = {
+              mountOptions = [ "subvol=@root" "noatime" "compress=zstd" ];
+              mountpoint = "/";
+            };
             "/nix" = {
               mountOptions = [ "subvol=nix" "noatime" ];
               mountpoint = "/nix";
-            };
-            # @persistent: persistent state subvolume on the NVMe SSD.
-            # This makes all preserved system and user configuration run on the SSD.
-            "/@persistent" = {
-              mountOptions = [
-                "subvol=@persistent"
-                "noatime"
-                "compress=zstd"
-              ];
-              mountpoint = "/persistent";
             };
           };
         };
       };
     };
 
-    # Large SATA HDD: persistent state.
+    # Large SATA HDD: bulk user data.
     #
-    # TODO: The filesystem was originally created without subvolumes. To add
-    # an @persistent subvolume later, boot from a live USB and run:
-    #
-    #   mount /dev/disk/by-id/ata-WDC_WD10SPZX-75Z10T2_WX21E78E5Z24-part1 /mnt
-    #   btrfs subvolume create /mnt/@persistent
-    #   mv /mnt/* /mnt/@persistent/ 2>/dev/null || true
-    #   # Do NOT move the @persistent directory into itself.
-    #   umount /mnt
-    #
-    # Then change this content block to type = "btrfs" with subvolumes.
+    # NOTE: disko is only ever run at format time; the NVMe filesystem also
+    # still carries legacy subvolumes left from the impermanent setup
+    # (@persistent, @persistent-ro-backup snapshot, and the old `persistent`
+    # and `@cache`). They are no longer mounted and are deleted manually
+    # once the traditional layout has been verified.
     disko.devices.disk.home = {
       device = "/dev/disk/by-id/ata-WDC_WD10SPZX-75Z10T2_WX21E78E5Z24";
       type = "disk";
