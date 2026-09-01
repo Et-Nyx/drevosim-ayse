@@ -19,6 +19,7 @@ in
         drevosim.servi.kokoro.enable = true;
         drevosim.servi.ftp-ps4-client.enable = true;
         drevosim.servi.calibre.enable = true;
+        drevosim.servi.adguard.enable = true;
       })
     ];
   };

@@ -17,24 +17,21 @@
       };
       ports = lib.mkOption {
         type = lib.types.listOf lib.types.port;
-        default = [
-          8000 # SillyTavern
-          8880 # Kokoro TTS API
-          12315 # Grayjay sync listener
-        ];
-        description = "TCP ports opened on the tailscale0 interface only.";
+        default = [ ];
+        description = ''
+          TCP ports opened on the tailscale0 interface only. Defaults are
+          added from config below (listOf concatenates across modules).
+        '';
       };
       serve = lib.mkOption {
         type = lib.types.attrsOf lib.types.str;
-        default = {
-          "8000" = "127.0.0.1:8000"; # SillyTavern
-          "8880" = "127.0.0.1:8880"; # Kokoro TTS API
-        };
+        default = { };
         description = ''
           Tailscale Serve routes: HTTPS port on the tailnet hostname -> local backend.
           Each entry yields https://ayse.<tailnet>.ts.net:<port> proxying to the
           given local address with a valid Tailscale-issued certificate.
-          Set to { } to disable Serve entirely.
+          Defaults are added from config below (attrsOf merges across modules);
+          set to lib.mkForce { } to disable Serve entirely.
         '';
       };
     };
@@ -46,9 +43,23 @@
         authKeyFile = cfg.authKeyFile;
       };
 
+      # Default Serve routes. Defined in config (not as the option default) so
+      # that feature modules can add their own entries — attrsOf definitions
+      # from multiple modules merge instead of clobbering each other.
+      drevosim.servi.tailscale.serve = {
+        "8000" = "127.0.0.1:8000"; # SillyTavern
+        "8880" = "127.0.0.1:8880"; # Kokoro TTS API
+      };
+
       # Web services reachable ONLY over the tailnet; MagicDNS gives them
       # https://ayse.<tailnet>.ts.net:<port> URLs from the phone.
-      networking.firewall.interfaces.tailscale0.allowedTCPPorts = cfg.ports;
+      # Defined in config (not as the option default) so feature modules can
+      # add ports — listOf definitions concatenate instead of clobbering.
+      networking.firewall.interfaces.tailscale0.allowedTCPPorts = cfg.ports ++ [
+        8000 # SillyTavern
+        8880 # Kokoro TTS API
+        12315 # Grayjay sync listener
+      ];
 
       # Apply Tailscale Serve routes on boot so HTTPS keeps working even after
       # the daemon state is reset. Serve config itself lives in /var/lib/tailscale.

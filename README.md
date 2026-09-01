@@ -75,6 +75,7 @@ This `README.md` covers the **what and where** — the file layout, the disks, t
 │       │   └── faylu/     # raw config files (filtered from import-tree)
 │       │       └── fuzzel.ini
 │       ├── servi/         # system services
+│       │   ├── adguard.nix        # AdGuard Home tailnet DNS adblocker
 │       │   ├── calibre.nix      # Calibre content server
 │       │   ├── network.nix
 │       │   ├── openssh.nix
@@ -219,6 +220,14 @@ Configured in `mon/sifa/servi/ai-chat/sillytavern.nix` and enabled directly in t
 
 See [`gida/sillytavern.md`](gida/sillytavern.md) for the full operator's manual (whitelist, extensions, relay configuration, troubleshooting).
 
+### AdGuard Home (Tailnet DNS Adblocker)
+
+Configured in `mon/sifa/servi/adguard.nix` and enabled at `drevosim.servi.adguard.enable = true`.
+
+[AdGuard Home](https://github.com/AdguardTeam/AdGuardHome) listening on `127.0.0.1:53` + the Tailscale IP (`100.75.243.95:53`) — port 53 is only open on the `tailscale0` interface. The Tailscale admin console points the tailnet's global nameserver at it (*Override local DNS*), so every connected device (phone, laptop) gets DNS-level ad blocking with no per-device setup; the host filters itself through tailscaled's `100.100.100.100` stub. Upstreams are encrypted DoH (Cloudflare/Google) — pointed at public resolvers so no resolver loop forms. The dashboard is proxied through Tailscale Serve at `https://ayse.tailfcc763.ts.net:3000`; the YAML is declaratively bootstrapped with two filter lists (AdGuard DNS filter, OISD Small) and then owned by the dashboard.
+
+See [`gida/adguard.md`](gida/adguard.md) for the full operator's manual (admin-console setup, first login, allowlisting, bypassing culprits like Android Private DNS, troubleshooting).
+
 ### Anonymous FTP server
 
 Configured in `mon/sifa/servi/ftp/ayse.nix` and enabled at `drevosim.servi.ftp-ayse.enable = true`.
@@ -256,6 +265,7 @@ service management, security and limits, and a quick reference.
 
 | Guide | Module |
 |-------|--------|
+| [`gida/adguard.md`](gida/adguard.md) | `mon/sifa/servi/adguard.nix` |
 | [`gida/calibre.md`](gida/calibre.md) | `mon/sifa/medya/calibre.nix`, `mon/sifa/servi/calibre.nix` |
 | [`gida/ftp-ayse.md`](gida/ftp-ayse.md) | `mon/sifa/servi/ftp/ayse.nix` |
 | [`gida/ftp-ps4-client.md`](gida/ftp-ps4-client.md) | `mon/sifa/servi/ftp/ps4-client.nix` |
