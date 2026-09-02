@@ -216,7 +216,7 @@ See [`gida/kokoro.md`](gida/kokoro.md) for the full operator's manual (API refer
 
 Configured in `mon/sifa/servi/ai-chat/sillytavern.nix` and enabled directly in the host assembler (`drevosim.servi.sillytavern.enable = true`).
 
-[SillyTavern](https://sillytavern.app/) web UI on `http://0.0.0.0:8000`, with whitelist access (localhost + Tailscale `100.64.0.0/10`). TTS is pre-configured to use the local Kokoro service with the `af_heart` voice; the chat backend is pre-configured to use the OpenCode Go relay via Cloudflare Worker (token in `siri/ayse-go-relay.age`); the fallback model is `minimax-m3`. Eight curated third-party extensions are bundled from flake inputs.
+[SillyTavern](https://sillytavern.app/) web UI on `http://0.0.0.0:8000`, with whitelist access (localhost + Tailscale `100.64.0.0/10`) and password-protected multi-user login (admin account `exdunyayen`, password in `siri/ayse-sillytavern.age`). TTS is pre-configured to use the local Kokoro service with the `af_heart` voice; the chat backend is pre-configured to use the OpenCode Go relay via Cloudflare Worker (token in `siri/ayse-go-relay.age`); the fallback model is `deepseek-v4-flash`. Eight curated third-party extensions are bundled from flake inputs.
 
 See [`gida/sillytavern.md`](gida/sillytavern.md) for the full operator's manual (whitelist, extensions, relay configuration, troubleshooting).
 

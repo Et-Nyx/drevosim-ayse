@@ -33,11 +33,17 @@ to the local Kokoro TTS service and the OpenCode Go chat relay.
 - Running on `0.0.0.0:8000`, accessible from LAN and Tailscale.
 - **Whitelist mode** is on by default. Only the listed IPs can
   connect (see [Whitelist and access control](#whitelist-and-access-control)).
+- **Password login** is on by default via SillyTavern's multi-user
+  mode (see [User accounts](#user-accounts-multi-user-login)).
 - **TTS** is pre-configured to use the local Kokoro service
   (`http://127.0.0.1:8880/v1`) with the `af_heart` voice.
 - **Chat backend** is pre-configured to use the OpenCode Go relay via
   Cloudflare Worker; the access token is decrypted from
-  `siri/ayse-go-relay.age` and the fallback model is `minimax-m3`.
+  `siri/ayse-go-relay.age` and the fallback model is `deepseek-v4-flash`.
+- **Multi-user login** is enabled: password-protected sessions with a
+  discreet login page. The admin account is `exdunyayen`; its password
+  comes from `siri/ayse-sillytavern.age`
+  (see [User accounts](#user-accounts-multi-user-login)).
 - Eight third-party extensions are bundled declaratively from flake
   inputs (see [Bundled extensions](#bundled-extensions)).
 - FlareSolverr is started automatically when CharacterLibrary plugins
@@ -71,9 +77,12 @@ to the local Kokoro TTS service and the OpenCode Go chat relay.
   - patches declarative settings: `listen=true`, `listenAddress.ipv4=
     0.0.0.0`, `whitelistMode=true`, `whitelist=[...]`, `extensions.*`
     flags,
-  - seeds `default-user/settings.json` with TTS + LLM relay
-    configuration,
-  - writes the relay access token to `default-user/secrets.json`.
+  - seeds the admin user's (`data/$adminHandle/`) `settings.json`
+    with TTS + LLM relay configuration,
+  - writes the relay access token to the admin user's
+    `secrets.json`,
+  - seeds the admin account password from the agenix secret (via
+    ST's `recover.js`).
 - The third-party extensions are symlinked into
   `/var/lib/SillyTavern/extensions/` by `systemd.tmpfiles` rules.
 - State is preserved on `/persistent` via the `preservation` module.
@@ -101,7 +110,12 @@ All options live under `drevosim.servi.sillytavern.*`. Defaults:
 | `defaultVoice` | `af_heart` | Default TTS voice seeded into settings. |
 | `llmRelayUrl` | `https://go-relay.eter-nyx-635.workers.dev/v1` | Chat relay URL. |
 | `llmRelayKeyFile` | `config.age.secrets.ayse-go-relay.path` | Path to a file containing the relay access token. |
-| `llmDefaultModel` | `minimax-m3` | Fallback model seeded before the relay is queried. |
+| `llmDefaultModel` | `deepseek-v4-flash` | Fallback model seeded before the relay is queried. |
+| `enableUserAccounts` | `true` | Multi-user mode with password-protected sessions. |
+| `enableDiscreetLogin` | `true` | Login form only (no user list on the login page). |
+| `sessionTimeout` | `-1` | Session timeout in seconds (`-1` = no expiry, `0` = browser close). |
+| `adminHandle` | `default-user` | Admin account handle. Set to `exdunyayen` in `estandar.nix`. |
+| `adminPasswordFile` | `config.age.secrets.ayse-sillytavern.path` | Plaintext admin password, re-applied on every service start. |
 | `enableCharacterLibraryPlugins` | `true` | Enable `cl-helper` server plugin and FlareSolverr. |
 | `extensions` | eight curated entries | Extensions to symlink into the global extensions directory. |
 
@@ -111,7 +125,7 @@ To change, edit `mon/mehmangi/ayse/estandar.nix`:
 drevosim.servi.sillytavern = {
   enable = true;
   defaultVoice = "pf_dora";   # use the Portuguese voice by default
-  llmDefaultModel = "minimax-m3";
+  llmDefaultModel = "deepseek-v4-flash";
 };
 ```
 
@@ -142,14 +156,16 @@ Then `sudo nixos-rebuild switch --flake .`.
    http://<ayse-ip>:8000
    ```
 
-4. On first visit, the UI may prompt for a one-time API key. Click
-   through the welcome screens — your relay credentials are already
-   pre-seeded in `default-user/secrets.json` and `default-user/settings.json`.
+4. Log in on the login page with the admin account `exdunyayen` and
+   the password stored in `siri/ayse-sillytavern.age`. On first visit,
+   the UI may prompt for a one-time API key. Click through the welcome
+   screens — your relay credentials are already pre-seeded in
+   `data/exdunyayen/secrets.json` and `data/exdunyayen/settings.json`.
 
 5. Pick a character, send a message, and verify the response streams
    in. The relay auto-discovers available models via
    `/v1/models`; you can pick from the list or stick with
-   `minimax-m3`.
+   `deepseek-v4-flash`.
 
 ---
 
@@ -184,15 +200,43 @@ extension's "Available voices" field.
 The seeder configures SillyTavern's Custom chat provider with:
 
 - **URL**: `https://go-relay.eter-nyx-635.workers.dev/v1`
-- **Model**: `minimax-m3` (fallback)
+- **Model**: `deepseek-v4-flash` (fallback)
 - **API key**: read from `siri/ayse-go-relay.age` (decrypted by
   agenix at boot)
 
 The relay is a Cloudflare Worker that proxies to OpenCode Go and
 exposes `/v1/models` so SillyTavern can auto-discover the available
 models. Once you've connected once, you can pick from the full model
-list — the fallback `minimax-m3` is just what gets seeded before the
+list — the fallback `deepseek-v4-flash` is just what gets seeded before the
 first `/v1/models` fetch completes.
+
+### User accounts (multi-user login)
+
+SillyTavern's built-in multi-user mode is enabled
+(`enableUserAccounts = true`):
+
+- **Admin account**: handle `exdunyayen` (`adminHandle`), name
+  "Eter". Its data lives in `data/exdunyayen/`.
+- **Password**: stored as plaintext in the agenix secret
+  `siri/ayse-sillytavern.age` and re-applied to the account on every
+  service start via ST's `recover.js` (so the Nix config is the
+  source of truth). Note the stored password *hash* in
+  `data/_storage/` changes on every boot — that's just a fresh salt;
+  the password itself stays the same.
+- **Login page**: discreet (`enableDiscreetLogin = true`) — asks for
+  username + password, no user list.
+- **Sessions**: no expiry by default (`sessionTimeout = -1`).
+- **Additional users**: create and manage them in SillyTavern's
+  admin panel (User Accounts) after logging in as the admin. Their
+  data lives in `data/<handle>/`; their account records in
+  `data/_storage/` (keyed by `sha256("user:<handle>")`).
+
+To change the admin password:
+
+```bash
+nix run github:ryantm/agenix -- -e siri/ayse-sillytavern.age
+sudo nixos-rebuild switch --flake .   # seeder applies it on restart
+```
 
 ### API call log (in Kokoro dashboard)
 
@@ -289,11 +333,14 @@ subdirectories:
 - `config.local.yaml` — declarative config (listen, whitelist,
   extensions flags). Seeded by the seeder on first run; do not edit
   by hand (the seeder will overwrite).
-- `data/default-user/settings.json` — per-user TTS, LLM, and
-  extension settings. Seeded on first run; can be edited through
-  the UI.
-- `data/default-user/secrets.json` — per-user API keys. The relay
+- `data/exdunyayen/settings.json` — per-user TTS, LLM, and
+  extension settings for the admin account. Seeded on first run; can
+  be edited through the UI.
+- `data/exdunyayen/secrets.json` — per-user API keys. The relay
   token is seeded here.
+- `data/_storage/` — user account records (handles, password
+  hashes/salts, admin flags). The admin password is re-seeded from
+  agenix on every start.
 - `data/<other-user>/` — additional users' data.
 - `extensions/` — symlinks to the bundled extensions (managed by
   tmpfiles).
@@ -346,6 +393,24 @@ Common causes:
 
 Check the whitelist. If you're connecting from a non-Tailscale, non-localhost
 IP, add it to the whitelist in the module and rebuild.
+
+### Login rejected / forgot the admin password
+
+The admin password comes from the agenix secret. Check:
+
+```bash
+ls -la /run/agenix/ayse-sillytavern
+sudo journalctl -u sillytavern | grep -i "recover\|password"
+```
+
+The journal should show `User recovered. A program will exit now.`
+from the seeder on each start. If the password still doesn't work,
+re-set it:
+
+```bash
+nix run github:ryantm/agenix -- -e siri/ayse-sillytavern.age
+sudo nixos-rebuild switch --flake .
+```
 
 ### TTS doesn't work
 
