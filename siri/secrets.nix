@@ -6,4 +6,5 @@ in
   "ayse-eter-pasalexi.age".publicKeys = [ ayse ];
   "ayse-go-relay.age".publicKeys = [ ayse ];
   "ayse-tailscale-auth.age".publicKeys = [ ayse ];
+  "ayse-sillytavern.age".publicKeys = [ ayse ];
 }

@@ -77,7 +77,34 @@ in
         ${pkgs.yq-go}/bin/yq -i '.enableServerPlugins = true' "$CFG_FILE"
         ${pkgs.yq-go}/bin/yq -i '.enableCorsProxy = true' "$CFG_FILE"
       ''}
+      ${lib.optionalString cfg.enableUserAccounts ''
+        ${pkgs.yq-go}/bin/yq -i '.enableUserAccounts = true' "$CFG_FILE"
+        ${pkgs.yq-go}/bin/yq -i '.enableDiscreetLogin = ${lib.boolToString cfg.enableDiscreetLogin}' "$CFG_FILE"
+        ${pkgs.yq-go}/bin/yq -i '.perUserBasicAuth = false' "$CFG_FILE"
+        ${pkgs.yq-go}/bin/yq -i '.sessionTimeout = ${toString cfg.sessionTimeout}' "$CFG_FILE"
+      ''}
       chown sillytavern:sillytavern "$CFG_FILE"
+
+      # --- 2b. Seed the admin account password (multi-user mode) ---
+      # recover.js hardcodes './config.yaml', so run it from a temp dir whose
+      # config points at the real data root.
+      ${lib.optionalString (cfg.enableUserAccounts && cfg.adminPasswordFile != null) ''
+        if [ -f "${cfg.adminPasswordFile}" ]; then
+          ADMIN_PW=$(${pkgs.coreutils}/bin/cat "${cfg.adminPasswordFile}" | ${pkgs.coreutils}/bin/tr -d '\n')
+          if [ -n "$ADMIN_PW" ]; then
+            RECOVER_DIR=$(${pkgs.coreutils}/bin/mktemp -d)
+            ${pkgs.coreutils}/bin/printf 'dataRoot: /var/lib/SillyTavern/data\n' > "$RECOVER_DIR/config.yaml"
+            (cd "$RECOVER_DIR" && ${pkgs.nodejs}/bin/node \
+              "${stPkg}/lib/node_modules/sillytavern/recover.js" default-user "$ADMIN_PW") \
+              || echo "sillytavern-seed: warning: could not set admin password"
+            ${pkgs.coreutils}/bin/rm -rf "$RECOVER_DIR"
+          else
+            echo "sillytavern-seed: warning: admin password file is empty, skipping password seed"
+          fi
+        else
+          echo "sillytavern-seed: warning: admin password file not found, skipping password seed"
+        fi
+      ''}
 
       # --- 3. Seed default-user settings (TTS + LLM + firstRun) ---
       mkdir -p "$ST_DIR"
@@ -198,6 +225,7 @@ in
       chmod 600 "$SETTINGS"
 
       chown -R sillytavern:sillytavern "$ST_DIR"
+      chown -R sillytavern:sillytavern "$BASE_DIR/data"
       echo "sillytavern-seed: wrote TTS settings (provider: OpenAI, url: ${cfg.ttsApiUrl}, voice: ${cfg.defaultVoice})"
       ${lib.optionalString (cfg.llmRelayKeyFile != null) ''
         if [ -n "$RELAY_KEY" ]; then
@@ -263,6 +291,44 @@ in
         type = lib.types.str;
         default = "minimax-m3";
         description = "Fallback model name seeded before SillyTavern connects to the relay.";
+      };
+
+      enableUserAccounts = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        description = ''
+          Enable SillyTavern's built-in multi-user mode with password
+          protected sessions. The existing default-user becomes the admin
+          account; additional users are managed in the admin panel UI.
+        '';
+      };
+
+      enableDiscreetLogin = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = ''
+          Hide the user list on the login screen (username + password form
+          only). Only applies when enableUserAccounts is on.
+        '';
+      };
+
+      sessionTimeout = lib.mkOption {
+        type = lib.types.int;
+        default = -1;
+        description = ''
+          User session timeout in seconds. -1 disables expiry (400-day
+          cookie), 0 expires the session when the browser closes.
+        '';
+      };
+
+      adminPasswordFile = lib.mkOption {
+        type = lib.types.nullOr lib.types.path;
+        default = null;
+        description = ''
+          Path to a file containing the plaintext password for the
+          default-user admin account (e.g. an agenix secret). Applied on
+          every service start; requires enableUserAccounts.
+        '';
       };
 
       enableCharacterLibraryPlugins = lib.mkOption {
