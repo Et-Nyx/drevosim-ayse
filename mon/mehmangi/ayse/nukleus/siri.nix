@@ -33,6 +33,12 @@
         group = "root";
         mode = "0400";
       };
+      ayse-sillytavern = {
+        file = self + /siri/ayse-sillytavern.age;
+        owner = "root";
+        group = "root";
+        mode = "0400";
+      };
     };
   };
 }

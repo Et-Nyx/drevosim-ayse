@@ -295,7 +295,7 @@ in
 
       enableUserAccounts = lib.mkOption {
         type = lib.types.bool;
-        default = false;
+        default = true;
         description = ''
           Enable SillyTavern's built-in multi-user mode with password
           protected sessions. The existing default-user becomes the admin
@@ -323,7 +323,7 @@ in
 
       adminPasswordFile = lib.mkOption {
         type = lib.types.nullOr lib.types.path;
-        default = null;
+        default = config.age.secrets.ayse-sillytavern.path;
         description = ''
           Path to a file containing the plaintext password for the
           default-user admin account (e.g. an agenix secret). Applied on
