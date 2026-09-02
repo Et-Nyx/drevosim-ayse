@@ -13,6 +13,7 @@ This `README.md` covers the **what and where** — the file layout, the disks, t
 - **`/nix`**: Dedicated Btrfs subvolume on the SSD.
 - **`/storage`**: Btrfs partition on the HDD for bulk user data.
 - **Desktop**: KDE Plasma 6 with SDDM.
+- **Networking**: Tailscale mesh VPN (on by default) with tailnet-only service exposure.
 
 ## File Layout
 
@@ -22,9 +23,13 @@ This `README.md` covers the **what and where** — the file layout, the disks, t
 ├── flake.lock             # locked input revisions
 ├── README.md              # this file
 ├── gida/                  # operator's manuals (one per major module)
+│   ├── adguard.md
+│   ├── calibre.md
 │   ├── ftp-ayse.md
+│   ├── ftp-ps4-client.md
 │   ├── kokoro.md
 │   ├── sillytavern.md
+│   ├── tailscale.md
 │   └── nvidia.md
 ├── mon/                   # module tree (imported recursively by import-tree)
 │   ├── parts.nix          # flake-parts systems configuration
@@ -40,6 +45,7 @@ This `README.md` covers the **what and where** — the file layout, the disks, t
 │   │           ├── xoru.nix       # bootloader configuration
 │   │           ├── disko.nix      # disk partitioning & filesystem layout
 │   │           ├── nvidia.nix     # NVIDIA PRIME offload & iGPU specialisation
+│   │           ├── powercap.nix   # thermald + RAPL CPU power caps (65 W adapter)
 │   │           └── siri.nix       # agenix secret declarations
 │   └── sifa/              # feature modules
 │       ├── kolor/         # theming & customization
@@ -68,8 +74,12 @@ This `README.md` covers the **what and where** — the file layout, the disks, t
 │       │           ├── canoe.toml
 │       │           └── rill.zon
 │       ├── produti/       # productivity tools
+│       │   ├── basa.nix         # base productivity packages
+│       │   ├── git.nix          # git + declarative ~/.gitconfig & ~/.ssh/config (nix-maid)
 │       │   └── tul.nix
 │       ├── programa/      # general programs
+│       │   ├── firefox.nix      # Firefox with enterprise policies (uBlock, DuckDuckGo)
+│       │   ├── waydroid.nix     # Android virtualization
 │       │   ├── fuzzel.nix
 │       │   ├── tul.nix
 │       │   └── faylu/     # raw config files (filtered from import-tree)
@@ -81,14 +91,16 @@ This `README.md` covers the **what and where** — the file layout, the disks, t
 │       │   ├── openssh.nix
 │       │   ├── mako.nix
 │       │   ├── polkit.nix
+│       │   ├── tailscale.nix    # Tailscale VPN + Serve routes + tailnet firewall
 │       │   ├── tul.nix
 │       │   ├── ai-chat/   # AI chat services
 │       │   │   ├── kokoro.nix        # Kokoro TTS API server + dashboard
 │       │   │   ├── sillytavern.nix   # SillyTavern web UI + extensions
 │       │   │   ├── dashboard.html    # Kokoro web dashboard UI
 │       │   │   └── dashboard_main.py # Kokoro dashboard middleware
-│       │   ├── ftp/                  # FTP services
-│       │   │   └── ayse.nix          # anonymous FTP server (vsftpd)
+│       │   └── ftp/                  # FTP services
+│       │       ├── ayse.nix          # anonymous FTP server (vsftpd)
+│       │       └── ps4-client.nix    # PS4 FTP client (FileZilla + lftp aliases)
 │       │   └── faylu/                # raw config files (filtered from import-tree)
 │       │       └── mako.ini
 │       ├── terminal/      # terminal emulators, shells & CLI tools
@@ -110,7 +122,9 @@ This `README.md` covers the **what and where** — the file layout, the disks, t
 │   ├── secrets.nix        # recipient public keys
 │   ├── ayse-root-pasalexi.age
 │   ├── ayse-eter-pasalexi.age
-│   └── ayse-go-relay.age  # OpenCode Go relay access token
+│   ├── ayse-go-relay.age      # OpenCode Go relay access token
+│   ├── ayse-sillytavern.age   # SillyTavern admin password
+│   └── ayse-tailscale-auth.age # Tailscale auth key
 └── yongu/                 # helper functions
     ├── monlari.nix        # recursive NixOS-module collector
     └── parseIni.nix       # pure-Nix INI parser for faylu/ files
@@ -188,6 +202,30 @@ sudo nixos-rebuild switch --flake .
 - Stale Chromium lock files and KWallet data are cleaned on every boot.
 - Bluetooth is enabled (`hardware.bluetooth`) with `powerOnBoot = true` and `bluez` in `systemPackages`.
 
+### Power capping (thermald + RAPL)
+
+Configured in `mon/mehmangi/ayse/nukleus/powercap.nix`. The Dell Inspiron 7580 runs AC-only with a 65 W adapter, and factory turbo spikes (PL2 up to 44 W) combined with the dGPU (25 W) and the rest of the system exceeded the adapter's capacity, causing instant shutdowns. `services.thermald` monitors temperatures as a safety net, and a oneshot systemd service (`intel-rapl-cap`) caps the CPU at boot: PL1 (sustained) 15 W, PL2 (burst) 25 W — 25 + 25 + ~14 = 64 W, just under the adapter limit. The `intel_rapl_common` and `intel_rapl_msr` kernel modules are loaded at boot.
+
+### Tailscale
+
+Configured in `mon/sifa/servi/tailscale.nix` and enabled **by default** (`drevosim.servi.tailscale.enable` defaults to `true`).
+
+[Tailscale](https://tailscale.com/) mesh VPN with the auth key managed by agenix (`siri/ayse-tailscale-auth.age`). Web services are reachable only over the tailnet: ports 8000 (SillyTavern) and 8880 (Kokoro TTS API) are opened on the `tailscale0` interface only, and Tailscale Serve proxies them to valid HTTPS URLs at `https://ayse.<tailnet>.ts.net:<port>`. The `ports` and `serve` options merge across modules, so feature modules can add their own entries without clobbering the defaults.
+
+See [`gida/tailscale.md`](gida/tailscale.md) for the full operator's manual.
+
+### Firefox
+
+Configured in `mon/sifa/programa/firefox.nix` and enabled by default. Mozilla Firefox with enterprise policies: telemetry, studies, Pocket, and onboarding messaging disabled; DuckDuckGo as the default search engine; `pt-BR` language pack; and force-installed extensions (uBlock Origin, Return YouTube Dislikes, SponsorBlock) pinned to the navbar. Cache directories are provisioned via tmpfiles rules.
+
+### Waydroid
+
+Configured in `mon/sifa/programa/waydroid.nix` and enabled by default (`drevosim.programa.waydroid.enable`). Android container virtualization via `virtualisation.waydroid` for running Android apps on the Plasma desktop.
+
+### Productivity tools & nix-maid
+
+Configured in `mon/sifa/produti/`. `git.nix` installs git and manages `~/.gitconfig` and `~/.ssh/config` (GitLab SSH key) declaratively through [nix-maid](https://github.com/nix-community/nix-maid) (`users.users.eter.maid`), reducing hand-managed dotfile state. `basa.nix` provides the base productivity package set.
+
 ### NVIDIA (Optimus / PRIME)
 
 Configured in `mon/mehmangi/ayse/nukleus/nvidia.nix`. The host (`ayse`) is a Dell Inspiron 7580 with Intel UHD 630 (iGPU) and NVIDIA GeForce MX150 (GP108M, Pascal). The dGPU is wired to a 3D controller class (no display), so PRIME render-offload is the only way to use it.
@@ -208,7 +246,7 @@ Configured in `mon/sifa/servi/ai-chat/kokoro.nix` and enabled directly in the ho
 
 A self-contained, offline [Kokoro-FastAPI](https://github.com/remsky/Kokoro-FastAPI) v0.5.0 server that exposes an OpenAI-compatible text-to-speech API. It bundles the Kokoro-82M v1.0 model, all 67 voice packs, and the English G2P spaCy model so nothing is downloaded at runtime. Binds to `0.0.0.0:8880` and serves a built-in web dashboard at `/dashboard`.
 
-CPU by default; CUDA opt-in via `drevosim.servi.kokoro.gpu = true` (Pascal `6.1`).
+CPU by default; CUDA opt-in via `drevosim.servi.kokoro.gpu = true` (Pascal `6.1`). The API runs with two workers so a long speech request doesn't block other clients (~2.2 GB RAM total for the two model copies).
 
 See [`gida/kokoro.md`](gida/kokoro.md) for the full operator's manual (API reference, all 67 voices, dashboard features, GPU mode, client configuration).
 
@@ -216,7 +254,7 @@ See [`gida/kokoro.md`](gida/kokoro.md) for the full operator's manual (API refer
 
 Configured in `mon/sifa/servi/ai-chat/sillytavern.nix` and enabled directly in the host assembler (`drevosim.servi.sillytavern.enable = true`).
 
-[SillyTavern](https://sillytavern.app/) web UI on `http://0.0.0.0:8000`, with whitelist access (localhost + Tailscale `100.64.0.0/10`) and password-protected multi-user login (admin account `exdunyayen`, password in `siri/ayse-sillytavern.age`). TTS is pre-configured to use the local Kokoro service with the `af_heart` voice; the chat backend is pre-configured to use the OpenCode Go relay via Cloudflare Worker (token in `siri/ayse-go-relay.age`); the fallback model is `deepseek-v4-flash`. Eight curated third-party extensions are bundled from flake inputs.
+[SillyTavern](https://sillytavern.app/) web UI on `http://0.0.0.0:8000`, with whitelist access (localhost + Tailscale `100.64.0.0/10`) and password-protected multi-user login (the admin account handle is configurable via `drevosim.servi.sillytavern.adminHandle`, set to `exdunyayen` in `estandar.nix`; the password lives in `siri/ayse-sillytavern.age` and is seeded at startup). TTS is pre-configured to use the local Kokoro service with the `af_heart` voice; the chat backend is pre-configured to use the OpenCode Go relay via Cloudflare Worker (token in `siri/ayse-go-relay.age`); the fallback model is `deepseek-v4-flash`. Eight curated third-party extensions are bundled from flake inputs.
 
 See [`gida/sillytavern.md`](gida/sillytavern.md) for the full operator's manual (whitelist, extensions, relay configuration, troubleshooting).
 
@@ -235,6 +273,18 @@ Configured in `mon/sifa/servi/ftp/ayse.nix` and enabled at `drevosim.servi.ftp-a
 A read-write [vsftpd](https://security.appspot.com/vsftpd.html) server with no authentication, designed for console homebrew FTP clients and LAN file sharing. Binds `0.0.0.0:21` with passive ports `30000–30100`. The anonymous root is `/var/lib/ftp-srv` (read-only); the only writable subdirectory is `upload/`. **Do not expose to the public internet.**
 
 See [`gida/ftp-ayse.md`](gida/ftp-ayse.md) for the full operator's manual (connection examples, upload/download, troubleshooting).
+
+### PS4 FTP client
+
+Configured in `mon/sifa/servi/ftp/ps4-client.nix` and enabled at `drevosim.servi.ftp-ps4-client.enable = true`.
+
+A client-side complement to the anonymous FTP server: [FileZilla](https://filezilla-project.org/) for GUI transfers plus `lftp` shell aliases (`ps4-ls`, `ps4-push`, `ps4-pull`, `ps4-ftp`) targeting the PS4's FTP server at `192.168.15.200:2121` for fast console homebrew file management.
+
+See [`gida/ftp-ps4-client.md`](gida/ftp-ps4-client.md) for the full operator's manual.
+
+### Grayjay
+
+Configured in `mon/sifa/medya/grayjay.nix` and enabled by default. The [Grayjay](https://grayjay.app/) desktop media app with settings declaratively re-applied on every launch (changes made in the Grayjay UI are reverted on the next rebuild + restart; override `drevosim.medya.grayjay.settings` to change defaults). The firewall is opened for LAN sync by default.
 
 ### Calibre
 
@@ -271,12 +321,13 @@ service management, security and limits, and a quick reference.
 | [`gida/ftp-ps4-client.md`](gida/ftp-ps4-client.md) | `mon/sifa/servi/ftp/ps4-client.nix` |
 | [`gida/kokoro.md`](gida/kokoro.md) | `mon/sifa/servi/ai-chat/kokoro.nix` |
 | [`gida/sillytavern.md`](gida/sillytavern.md) | `mon/sifa/servi/ai-chat/sillytavern.nix` |
+| [`gida/tailscale.md`](gida/tailscale.md) | `mon/sifa/servi/tailscale.nix` |
 | [`gida/nvidia.md`](gida/nvidia.md) | `mon/mehmangi/ayse/nukleus/nvidia.nix` |
 
 ## Todo / Hardening Notes
 
 - [ ] Deploy SSH keys and set `PasswordAuthentication = false`.
-- [ ] Integrate `nix-maid` to manage dotfiles declaratively and reduce the amount of hand-managed `~/.config` state.
+- [x] Integrate `nix-maid` to manage dotfiles declaratively and reduce the amount of hand-managed `~/.config` state (done for git config in `produti/git.nix`).
 - [ ] Move KDE Plasma configuration from `~/.config` into Nix modules.
 - [ ] Consider switching from `legacy_580` to the open kernel modules once the hardware supports it (currently blocked by Pascal).
 - [ ] The anonymous FTP server is plain (no TLS) and unauthenticated; keep it on the LAN/Tailscale only and do not port-forward it.
