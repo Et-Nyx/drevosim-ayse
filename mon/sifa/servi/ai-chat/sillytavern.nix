@@ -56,7 +56,7 @@ in
       set -euo pipefail
       BASE_DIR="/var/lib/SillyTavern"
       CFG_FILE="$BASE_DIR/config.local.yaml"
-      ST_DIR="$BASE_DIR/data/default-user"
+      ST_DIR="$BASE_DIR/data/${cfg.adminHandle}"
 
       # --- 1. Bootstrappable config.local.yaml from the package default ---
       if [ ! -f "$CFG_FILE" ]; then
@@ -95,7 +95,7 @@ in
             RECOVER_DIR=$(${pkgs.coreutils}/bin/mktemp -d)
             ${pkgs.coreutils}/bin/printf 'dataRoot: /var/lib/SillyTavern/data\n' > "$RECOVER_DIR/config.yaml"
             (cd "$RECOVER_DIR" && ${pkgs.nodejs}/bin/node \
-              "${stPkg}/lib/node_modules/sillytavern/recover.js" default-user "$ADMIN_PW") \
+              "${stPkg}/lib/node_modules/sillytavern/recover.js" ${cfg.adminHandle} "$ADMIN_PW") \
               || echo "sillytavern-seed: warning: could not set admin password"
             ${pkgs.coreutils}/bin/rm -rf "$RECOVER_DIR"
           else
@@ -106,7 +106,7 @@ in
         fi
       ''}
 
-      # --- 3. Seed default-user settings (TTS + LLM + firstRun) ---
+      # --- 3. Seed admin (${cfg.adminHandle}) settings (TTS + LLM + firstRun) ---
       mkdir -p "$ST_DIR"
       chmod 700 "$ST_DIR"
 
@@ -289,7 +289,7 @@ in
 
       llmDefaultModel = lib.mkOption {
         type = lib.types.str;
-        default = "minimax-m3";
+        default = "deepseek-v4-flash";
         description = "Fallback model name seeded before SillyTavern connects to the relay.";
       };
 
@@ -328,6 +328,16 @@ in
           Path to a file containing the plaintext password for the
           default-user admin account (e.g. an agenix secret). Applied on
           every service start; requires enableUserAccounts.
+        '';
+      };
+
+      adminHandle = lib.mkOption {
+        type = lib.types.str;
+        default = "default-user";
+        description = ''
+          Handle (account name) of the admin account used for the settings
+          seeder and the admin password seeding. Must match the existing
+          user data directory under /var/lib/SillyTavern/data/.
         '';
       };
 

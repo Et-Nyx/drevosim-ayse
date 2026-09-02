@@ -16,6 +16,7 @@ in
           yongu.monlari (self.nixosModules.ayse or {});
 
         drevosim.servi.sillytavern.enable = true;
+        drevosim.servi.sillytavern.adminHandle = "exdunyayen";
         drevosim.servi.kokoro.enable = true;
         drevosim.servi.ftp-ps4-client.enable = true;
         drevosim.servi.calibre.enable = true;
